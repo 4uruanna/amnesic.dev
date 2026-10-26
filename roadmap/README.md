@@ -18,12 +18,12 @@ apimail V1 : une API PHP (Slim 4, MySQL 8.4) sur l'Hébergement Web Pro OVH, qui
 
 | Milestone | Démo de sortie | Phases |
 |:---|:---|---:|
-| [J01 Socle](j01-socle/README.md) | `curl https://api.<domaine>/v1/messages` avec un jeton bidon reçoit `401` « jeton invalide » en `problem+json` : l'en-tête `Authorization` arrive à PHP | 5 |
+| [J01 Socle](j01-socle/README.md) | `curl https://www.amnesic.dev/v1/messages` avec un jeton bidon reçoit `401` « jeton invalide » en `problem+json` : l'en-tête `Authorization` arrive à PHP | 6 |
 | [J02 Comptes et auth](j02-comptes-et-auth/README.md) | un admin créé en SQL crée un bot, un user, leurs jetons et un Binding | 4 |
 | [J03 Dépôt](j03-depot/README.md) | le bot dépose un Message avec une pièce jointe ; un `cc` reçoit `422` | 3 |
 | [J04 Lecture et suppression](j04-lecture-et-suppression/README.md) | un user lit ses Messages ; celui d'un autre Compte lui répond `404` | 4 |
 | [J05 Purge et mise en prod](j05-purge-et-mise-en-prod/README.md) | un Message vieux de 31 jours disparaît à l'heure suivante ; la recette passe en production | 3 |
-| **Total** | | **19** |
+| **Total** | | **20** |
 
 ## Lancer une phase
 
@@ -57,4 +57,4 @@ L'ordre des phases est celui de la liste de chaque milestone : la prochaine est 
 - Joker ou sous-adressage dans les Bindings.
 - Expiration des jetons, gestion de ses jetons par un `user`.
 - Limitation de débit, journal d'audit, sauvegarde applicative.
-- Intégration continue et déploiement automatique.
+- Appel automatique de `/v1/setup` après un déploiement.

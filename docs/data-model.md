@@ -94,7 +94,7 @@ CREATE TABLE message_reads (
 );
 ```
 
-Table technique, tenue par `bin/migrate.php` :
+Table technique, tenue par `Shared\Migrator` (`GET /v1/setup`) :
 
 ```sql
 CREATE TABLE schema_migrations (

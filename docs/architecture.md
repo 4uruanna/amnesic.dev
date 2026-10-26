@@ -26,8 +26,11 @@ src/
     Model/                     Message, Recipient, Attachment
     Dto/                       MessageDeposit, Address, AttachmentDeposit,
                                MessageSummary, MessageDetail, AttachmentInfo
+  Setup/
+    SetupController.php        GET /v1/setup (jeton admin dans l'URL, ou base vide)
   Shared/
     Database.php               connexion PDO
+    Migrator.php               migrations/*.sql et schema_migrations
     Uuid.php                   UUIDv7
     JsonBody.php               lecture du corps JSON (400, 415)
     Page.php                   DTO de pagination
@@ -36,7 +39,9 @@ src/
     SecurityHeaders.php
   app.php                      middlewares et routes
   container.php                définitions php-di
-bin/                           migrate.php, purge.php
+bin/                           purge.php
+.github/workflows/ci.yml       tests, puis publication de la branche ovh (infra.md § Déploiement)
+.htaccess, .ovhconfig          configuration OVH du dossier du site
 tests/                         même arborescence que src/
 ```
 
@@ -56,6 +61,7 @@ tests/                         même arborescence que src/
 
 - Controller → Service → Repository → Model, jamais dans l'autre sens. Un Controller n'appelle pas un Repository.
 - `Message` peut utiliser `Account` (le Model du Compte connecté, `RequireRole`), jamais l'inverse.
+- `Setup` peut utiliser `Account` (vérifier le jeton admin) et `Shared\Migrator` ; aucun autre dossier n'utilise `Setup`.
 - `Shared` ne dépend d'aucun autre dossier de `src/`.
 
 ## Erreurs

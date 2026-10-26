@@ -9,7 +9,7 @@ Le contrat complet vérifié en production, avec `curl`.
 
 ## Scénario
 
-1. Admin créé en SQL (`infra.md` § Créer un admin) → son jeton répond `200` sur `GET /v1/accounts`.
+1. Avec le jeton admin : `GET /v1/setup?token=…` → `200`, `applied` vide ; `GET /v1/accounts` → `200`.
 2. L'admin crée `relais-mx` (`bot`), `ci` et `autre` (`user`), leurs jetons, et le Binding `ci@<domaine>` → `ci`.
 3. `relais-mx` dépose un Message pour `ci@<domaine>` avec une pièce jointe → `201` ; avec un champ `cc` → `422` ; sur `GET /v1/messages` → `403`.
 4. `ci` : `GET /v1/messages?unread=1` le liste → détail `200` → `?unread=1` ne le liste plus → pièce jointe identique à l'envoi.

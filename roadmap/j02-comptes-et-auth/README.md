@@ -4,7 +4,7 @@ Les Comptes, leurs Jetons et leurs Bindings, l'authentification réelle et le co
 
 ## Démo de sortie
 
-1. Créer un admin avec la requête SQL de [`infra.md` § Créer un admin](../../docs/infra.md#créer-un-admin).
+1. Sur une base vide, ouvrir `/v1/setup` sans jeton : `001_comptes.sql` est appliquée. Créer un admin avec la requête SQL de [`infra.md` § Créer un admin](../../docs/infra.md#créer-un-admin) ; `/v1/setup?token=<son jeton>` répond alors `200` et `applied` vide.
 2. Avec son jeton : `POST /v1/accounts` crée `relais-mx` (`bot`) et `ci` (`user`), `POST …/tokens` leur donne un jeton, `POST …/bindings` lie `ci@<domaine>` à `ci`.
 3. `GET /v1/accounts/{id}` de `ci` montre l'adresse et le jeton (sans secret) ; le jeton de `ci` reçoit `403` sur `/v1/accounts`.
 

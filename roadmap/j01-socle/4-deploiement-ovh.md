@@ -1,24 +1,24 @@
 # J01-4 Déploiement OVH
 
-**Dépend de** : J01-2, J01-3
-**Docs** : [infra.md § Mise en place](../../docs/infra.md#mise-en-place-une-fois), [§ Déploiement](../../docs/infra.md#déploiement)
+**Dépend de** : J01-2, J01-3, J01-6
+**Docs** : [infra.md § Mise en place](../../docs/infra.md#mise-en-place-une-fois), [§ Déploiement](../../docs/infra.md#déploiement), [ADR 0012](../../docs/adr/0012-deploiement-git-ovh.md)
 
 ## Objectif
 
-L'API tourne sur `api.<domaine>`, déployée par un script rejouable qui ne touche jamais aux données du serveur.
+L'API tourne sur `https://www.amnesic.dev`, déployée par l'intégration Git d'OVH depuis la branche `ovh`, sans que les déploiements touchent aux données du serveur.
 
 ## Contenu
 
-- `public/.ovhconfig` (`app.engine.version=8.4`) et `public/.htaccess` (`CGIPassAuth`, redirection HTTPS, front controller), tels que `infra.md`.
-- `deploy.sh` : `composer install --no-dev` dans un dossier temporaire, `rsync --delete` des seuls `public/`, `src/`, `bin/`, `migrations/`, `vendor/`, puis migrations en SSH avec `/usr/local/php8.4/bin/php`.
+- `.ovhconfig` (`app.engine.version=8.4`) et `.htaccess` (`CGIPassAuth`, redirection HTTPS, tout vers `public/index.php`) à la racine du dépôt, tels qu'`infra.md`.
 
 ## Actions de ta part
 
-- Dans le Control Panel : la base MySQL 8.4, le Multisite `api.<domaine>` → `apimail/public` avec pare-feu désactivé, ta clé SSH.
-- Sur le serveur : `/apimail/config.php`, rempli par toi.
-- Dans ton shell : `OVH_SSH`.
+- Control Panel : la base MySQL 8.4 ; sur la ligne `www.amnesic.dev` de « Mes sites », SSL actif, pare-feu applicatif désactivé, dossier vidé.
+- « Lier Git » sur la branche `ovh`, avec la clé SSH d'OVH en deploy key du dépôt (lecture seule) et le webhook.
+- `www/config.php`, copié de `config.template.php` et rempli par toi.
 
 ## Terminé quand
 
 - La démo de sortie de J01 passe.
-- Un fichier témoin posé dans `/apimail/storage/` et `config.php` survivent à un second `deploy.sh`.
+- `https://www.amnesic.dev/.git/config`, `/config.php` et `/src/app.php` répondent `404`.
+- Un fichier témoin dans `www/storage/` et `www/config.php` survivent à un déploiement par webhook, puis à un « Deploy Git » forcé.

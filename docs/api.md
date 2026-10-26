@@ -7,11 +7,12 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
 - [DTO](#dto)
 - [Endpoints Messages](#endpoints-messages)
 - [Endpoints Comptes](#endpoints-comptes)
+- [Endpoint d'exploitation](#endpoint-dexploitation)
 - [En-têtes de sécurité](#en-têtes-de-sécurité)
 
 ## Conventions
 
-- **URL de base** : `https://api.<domaine>/v1`. HTTPS seulement : une requête en HTTP reçoit une redirection `301` (qu'un client ne doit pas suivre pour un `POST`, il appelle directement en HTTPS).
+- **URL de base** : `https://www.amnesic.dev/v1`. HTTPS seulement : une requête en HTTP reçoit une redirection `301` (qu'un client ne doit pas suivre pour un `POST`, il appelle directement en HTTPS).
 - **Format** : JSON UTF-8. Un corps de requête porte `Content-Type: application/json`, sinon `415`. Un JSON mal formé reçoit `400`.
 - **Champs inconnus** : refusés (`422`) dans tout corps de requête, à tous les niveaux. Les paramètres de requête inconnus sont ignorés.
 - **Dates** : ISO 8601 / RFC 3339. En entrée, tout décalage horaire est accepté ; en sortie, toujours UTC à la milliseconde : `2026-10-26T09:59:58.000Z`.
@@ -59,7 +60,7 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
 
 ## Authentification et permissions
 
-Chaque route `/v1` exige `Authorization: Bearer <jeton>`, où le jeton fait 64 caractères hexadécimaux minuscules ([ADR 0004](adr/0004-jetons-opaques.md)). Sans en-tête, ou avec un jeton inconnu, l'API répond `401` avec `WWW-Authenticate: Bearer` ; le `detail` distingue « jeton absent » de « jeton invalide ». Une route inconnue répond `404` avant toute authentification.
+Chaque route `/v1`, sauf [`GET /v1/setup`](#get-v1setup), exige `Authorization: Bearer <jeton>`, où le jeton fait 64 caractères hexadécimaux minuscules ([ADR 0004](adr/0004-jetons-opaques.md)). Sans en-tête, ou avec un jeton inconnu, l'API répond `401` avec `WWW-Authenticate: Bearer` ; le `detail` distingue « jeton absent » de « jeton invalide ». Une route inconnue répond `404` avant toute authentification.
 
 L'API vérifie le rôle (`403`) avant de charger la ressource (`404`).
 
@@ -71,6 +72,7 @@ L'API vérifie le rôle (`403`) avant de charger la ressource (`404`).
 | `GET /v1/messages/{id}/attachment/{partId}` | tous | les siens | ✗ |
 | `DELETE /v1/messages/{id}` | tous | les siens | ✗ |
 | `/v1/accounts` et toutes ses sous-routes | ✓ | ✗ | ✗ |
+| `GET /v1/setup` | ✓, jeton dans `?token=` | ✗ | ✗ |
 
 « Les siens » : les Messages dont au moins un Destinataire (`To`) correspond à l'un des Bindings du Compte, y compris les Messages reçus avant la création du Binding ([ADR 0002](adr/0002-seul-to-donne-acces.md)). Un Message sans Destinataire lié n'est visible que des `admin`.
 
@@ -261,6 +263,18 @@ Toutes ces routes sont réservées au rôle `admin`. Le premier `admin` se crée
 
 Un `admin` peut supprimer son propre Compte ou le Jeton qu'il utilise ; s'il ne reste aucun `admin`, on en recrée un en SQL.
 
+## Endpoint d'exploitation
+
+### `GET /v1/setup`
+
+Applique les migrations SQL en attente ([ADR 0013](adr/0013-migrations-par-get-setup.md)). Prévu pour être ouvert dans un navigateur après un déploiement.
+
+- **Authentification** : le jeton d'un Compte `admin` dans le paramètre `token` : `https://www.amnesic.dev/v1/setup?token=<64 hex>`. C'est la seule route qui accepte un jeton dans l'URL, et elle n'accepte pas l'en-tête `Authorization`. Jeton absent ou invalide : `401` ; Compte qui n'est pas `admin` : `403`.
+- **Installation** : tant que la base est vide (la table `schema_migrations` n'existe pas), la route fonctionne sans jeton.
+- **Concurrence** : un verrou MySQL (`GET_LOCK`) fait attendre un second appel simultané, qui n'applique ensuite rien.
+- **Réponse** : `200`, `{ "applied": ["001_comptes.sql", "002_messages.sql"] }`, liste vide s'il n'y avait rien à appliquer.
+- **Échec** : `500` sans détail (le détail va dans le log d'erreurs PHP) ; les migrations appliquées avant l'échec le restent.
+
 ## En-têtes de sécurité
 
 Sur toutes les réponses :
@@ -269,6 +283,6 @@ Sur toutes les réponses :
 - `X-Content-Type-Options: nosniff`
 - `Cache-Control: no-store`
 
-Aucun en-tête CORS : l'API n'est pas destinée aux navigateurs. Les pièces jointes portent en plus `Content-Disposition: attachment` et `Content-Security-Policy: default-src 'none'; sandbox`, pour qu'un HTML reçu ne s'exécute jamais sous le domaine de l'API.
+Aucun en-tête CORS : aucune page web n'appelle l'API en JavaScript (ouvrir `/v1/setup` dans un navigateur n'en a pas besoin). Les pièces jointes portent en plus `Content-Disposition: attachment` et `Content-Security-Policy: default-src 'none'; sandbox`, pour qu'un HTML reçu ne s'exécute jamais sous le domaine de l'API.
 
 L'API ne limite pas le débit et ne tient pas de journal d'audit : un jeton de 256 bits ne se devine pas, OVH filtre en amont et garde les journaux d'accès.
