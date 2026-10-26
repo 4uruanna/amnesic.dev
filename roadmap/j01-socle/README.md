@@ -14,7 +14,7 @@ curl -i http://www.amnesic.dev/v1/messages
 ## Phases
 
 - [x] [J01-1 Squelette Slim](1-squelette-slim.md)
-- [ ] [J01-5 Architecture en couches](5-architecture-en-couches.md)
+- [x] [J01-5 Architecture en couches](5-architecture-en-couches.md)
 - [ ] [J01-2 Base et migrations](2-base-et-migrations.md)
 - [ ] [J01-3 Garde Bearer](3-garde-bearer.md)
 - [ ] [J01-6 Intégration continue et branche `ovh`](6-integration-continue-et-branche-ovh.md)
