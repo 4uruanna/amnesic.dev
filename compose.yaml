@@ -1,0 +1,25 @@
+# Environnement local des tests : docs/infra.md § Développement local.
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${API_MAIL_DB_PASSWORD:-}
+      MYSQL_DATABASE: apimail_test
+    ports:
+      - 127.0.0.1:3306:3306
+    tmpfs: /var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 --silent
+      interval: 2s
+      retries: 60
+
+  # php:8.4-cli n'a pas pdo_mysql. Partage le réseau de mysql : 127.0.0.1 de config.php y désigne MySQL.
+  php:
+    build:
+      dockerfile_inline: |
+        FROM php:8.4-cli
+        RUN docker-php-ext-install pdo_mysql
+    network_mode: service:mysql
+    volumes:
+      - .:/app
+    working_dir: /app

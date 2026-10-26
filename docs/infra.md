@@ -92,13 +92,18 @@ const API_MAIL_DB_PASSWORD = '';
 
 Le PHP du poste (8.5, sans `pdo_mysql`, `dom` ni `mbstring`) ne suffit pas : Composer et les tests tournent dans Docker, en PHP 8.4 comme en production. `composer.json` épingle aussi la plateforme à 8.4.0, pour que les dépendances restent installables sur OVH.
 
+`compose.yaml` décrit l'environnement des tests : MySQL 8.4, dont le mot de passe root est `API_MAIL_DB_PASSWORD` du `config.php` local et dont les données vivent en mémoire (perdues à l'arrêt), et une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), qui partage le réseau de MySQL. Le `config.php` local vise donc `127.0.0.1` avec l'utilisateur `root`.
+
 ```sh
 docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app composer:2 install
-docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app php:8.4-cli vendor/bin/phpunit
+API_MAIL_DB_PASSWORD="$(php -r 'require "config.php"; echo API_MAIL_DB_PASSWORD;')" docker compose up -d --wait mysql
+docker compose run --rm --no-deps -u "$(id -u):$(id -g)" php vendor/bin/phpunit
 php -S localhost:8080 -t public
 ```
 
-À partir de J01-2 : MySQL 8.4 dans un conteneur, dont le mot de passe root est `API_MAIL_DB_PASSWORD` du `config.php` local (`php -r 'require "config.php"; echo API_MAIL_DB_PASSWORD;'`), une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), et les tests d'intégration contre une base `apimail_test`.
+`--no-deps` est nécessaire : sans `API_MAIL_DB_PASSWORD` dans l'environnement, Compose recréerait MySQL avec un mot de passe vide, que l'image refuse : MySQL s'arrêterait. `docker compose down` arrête MySQL.
+
+Les tests d'intégration travaillent toujours sur la base `apimail_test` du serveur de `config.php`, quel que soit `API_MAIL_DB_NAME` : `tests/TestDatabase.php` la vide et lui réapplique `migrations/` avant chaque test qui l'utilise.
 
 ## Déploiement
 
