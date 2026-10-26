@@ -10,7 +10,7 @@ Chaque Compte liste exactement les Messages qu'il a le droit de voir.
 ## Contenu
 
 - `migrations/003_lectures.sql` : `message_reads`, à l'identique de `data-model.md`.
-- Route `GET /v1/messages` (rôles `admin` et `user`) : requête de visibilité, filtres `to`, `since`, `unread`, pagination, tri `receivedAt` puis `id` décroissants ; DTO `MessageSummary`.
+- `MessageController::list` → `MessageService::list` → `MessageRepository` : route `GET /v1/messages` (rôles `admin` et `user`), requête de visibilité, filtres `to`, `since`, `unread`, pagination, tri `receivedAt` puis `id` décroissants ; DTO `MessageSummary`.
 - Elle remplace la réponse `501` de J01-3.
 
 ## Terminé quand

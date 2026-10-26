@@ -9,7 +9,7 @@ Un script qui supprime les Messages reçus il y a plus de 30 jours.
 
 ## Contenu
 
-- `bin/purge.php` : sélectionne par lots de 500 les Messages dont `received_at` a plus de 30 jours et les supprime avec la fonction de J04-4, jusqu'à épuisement.
+- `bin/purge.php` prend `MessageService` dans le conteneur ; `MessageService::purge()` sélectionne par lots de 500 les Messages dont `received_at` a plus de 30 jours et les supprime par le même chemin que J04-4, jusqu'à épuisement.
 - Écrit `purged <n>` sur la sortie standard ; en cas d'erreur, écrit le message sur la sortie d'erreur et sort avec un code non nul, pour qu'OVH compte l'échec.
 
 ## Terminé quand

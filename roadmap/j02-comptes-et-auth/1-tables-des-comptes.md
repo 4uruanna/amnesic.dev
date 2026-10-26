@@ -10,7 +10,8 @@ Les tables des Comptes et le générateur d'identifiants.
 ## Contenu
 
 - `migrations/001_comptes.sql` : `accounts`, `tokens`, `bindings`, à l'identique de `data-model.md`.
-- Générateur UUIDv7 dans `src/` (horodatage en millisecondes et `random_bytes`), sans bibliothèque.
+- `Shared\Uuid` : générateur UUIDv7 (horodatage en millisecondes et `random_bytes`), sans bibliothèque.
+- Models `Account\Model\Account` et `Account\Model\Token`.
 
 ## Terminé quand
 

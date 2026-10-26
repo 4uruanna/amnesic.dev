@@ -9,7 +9,7 @@ Le téléchargement d'une pièce jointe, sans qu'un navigateur puisse l'exécute
 
 ## Contenu
 
-- Route `GET /v1/messages/{id}/attachment/{partId}` (rôles `admin` et `user`), contenu lu en flux depuis `parts/{partId}`.
+- `MessageController::attachment` → `MessageService::attachment` : route `GET /v1/messages/{id}/attachment/{partId}` (rôles `admin` et `user`), contenu lu en flux par `MessageFiles`.
 - En-têtes `Content-Type` (celui du dépôt), `Content-Length`, `Content-Disposition: attachment; filename="…"; filename*=UTF-8''…`, `Content-Security-Policy: default-src 'none'; sandbox`.
 - Ne marque pas le Message lu.
 

@@ -9,7 +9,7 @@ Un dépôt est accepté s'il respecte exactement le contrat, et chaque écart es
 
 ## Contenu
 
-- DTO `MessageDeposit`, `Address`, `AttachmentDeposit` en `readonly class`, construits depuis le tableau JSON avec toutes les règles d'`api.md` : champs obligatoires, longueurs, adresses validées et mises en minuscules, `to` dédoublonné, dates RFC 3339 converties en UTC, base64 strict (`base64_decode($s, true)`), caractères de contrôle refusés dans `filename` et `contentType`.
+- DTO `Message\Dto\MessageDeposit`, `Address`, `AttachmentDeposit` en `readonly class`, construits par `fromArray()`, qui lève `ValidationFailed` avec toutes les erreurs d'un coup, selon toutes les règles d'`api.md` : champs obligatoires, longueurs, adresses validées et mises en minuscules, `to` dédoublonné, dates RFC 3339 converties en UTC, base64 strict (`base64_decode($s, true)`), caractères de contrôle refusés dans `filename` et `contentType`.
 - Tout champ inconnu, `cc` et `bcc` compris, est une erreur `Champ inconnu.`
 
 ## Terminé quand

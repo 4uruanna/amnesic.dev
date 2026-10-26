@@ -9,8 +9,8 @@ Un jeton connu authentifie son Compte, et chaque route n'admet que les rôles du
 
 ## Contenu
 
-- La garde Bearer cherche `hash('sha256', $jeton)` dans `tokens` et attache le Compte (`id`, `role`) à la requête.
-- Garde de rôle déclarée par route, qui répond `403` avant tout chargement de ressource.
+- `Account\Authentication` cherche `hash('sha256', $jeton)` par `TokenRepository` et attache le Model `Account` à la requête (attribut `account`).
+- `Account\RequireRole`, ajouté par route dans `app.php` (`new RequireRole('admin')`), lève `HttpForbiddenException` (`403`) avant tout chargement de ressource.
 
 ## Terminé quand
 

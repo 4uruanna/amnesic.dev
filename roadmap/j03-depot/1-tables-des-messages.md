@@ -10,6 +10,7 @@ Les tables qui reçoivent les métadonnées des Messages.
 ## Contenu
 
 - `migrations/002_messages.sql` : `messages`, `recipients`, `attachments`, à l'identique de `data-model.md`.
+- Models `Message\Model\Message`, `Recipient` et `Attachment`.
 
 ## Terminé quand
 

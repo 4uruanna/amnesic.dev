@@ -42,7 +42,7 @@ Actions dans le Control Panel OVH :
 1. **Base** : Bases de données → créer une base MySQL 8.4 dédiée à l'API. Noter l'hôte (`<base>.mysql.db`), le nom et l'utilisateur ; le mot de passe, tu le saisis toi-même dans `config.php`.
 2. **Multisite** : ajouter le sous-domaine `api.<domaine>`, dossier racine `apimail/public`, **pare-feu applicatif désactivé**, SSL activé (Let's Encrypt, automatique dès que le DNS pointe sur l'hébergement).
 3. **SSH** : récupérer l'hôte (`ssh.clusterXXX.hosting.ovh.net`) et l'utilisateur FTP/SSH, et y déposer ta clé publique.
-4. **Configuration** : copier `config.example.php` en `/apimail/config.php` sur le serveur et le remplir.
+4. **Configuration** : copier `config.template.php` en `/apimail/config.php` sur le serveur et le remplir.
 5. **Cron** : voir [Purge](#purge).
 
 ### `public/.ovhconfig`
@@ -70,19 +70,20 @@ Si `CGIPassAuth` est refusé (erreur 500 dans les logs), le remplacer par `SetEn
 
 ### `config.php`
 
-Hors du dossier public, absent du dépôt git ; le dépôt contient `config.example.php`, mêmes clés, valeurs vides.
+Toute la configuration d'une installation tient dans `config.php`, à la racine de l'API (`/apimail/config.php` sur le serveur, la racine du dépôt en local) : hors du dossier public, ignoré par git, jamais envoyé par le déploiement. Le dépôt contient `config.template.php`, avec les mêmes constantes vides : le copier en `config.php` et le remplir.
 
 ```php
 <?php
-return [
-    'db' => [
-        'dsn' => 'mysql:host=<base>.mysql.db;dbname=<base>;charset=utf8mb4',
-        'user' => '',
-        'password' => '',
-    ],
-    'storage' => __DIR__ . '/storage',
-];
+
+declare(strict_types=1);
+
+const API_MAIL_DB_HOST = '';     // <base>.mysql.db sur OVH, 127.0.0.1 en local
+const API_MAIL_DB_NAME = '';
+const API_MAIL_DB_USER = '';
+const API_MAIL_DB_PASSWORD = '';
 ```
+
+`src/container.php` le charge par `require_once` et en tire le `PDO`. Le chemin de `storage/` n'est pas configurable : c'est toujours le dossier `storage/` voisin de `config.php`.
 
 ## Développement local
 
@@ -94,7 +95,7 @@ docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app php:8.4-cli vendor
 php -S localhost:8080 -t public
 ```
 
-À partir de J01-2 : MySQL 8.4 dans un conteneur (`MYSQL_ROOT_PASSWORD` lu dans `APIMAIL_DB_PASSWORD`, à définir dans ton shell), une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), et les tests d'intégration contre une base `apimail_test`.
+À partir de J01-2 : MySQL 8.4 dans un conteneur, dont le mot de passe root est `API_MAIL_DB_PASSWORD` du `config.php` local (`php -r 'require "config.php"; echo API_MAIL_DB_PASSWORD;'`), une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), et les tests d'intégration contre une base `apimail_test`.
 
 ## Déploiement
 

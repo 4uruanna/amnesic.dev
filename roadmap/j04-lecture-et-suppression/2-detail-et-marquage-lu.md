@@ -9,8 +9,8 @@ Le détail d'un Message, qui le marque lu pour le Compte appelant.
 
 ## Contenu
 
-- Route `GET /v1/messages/{id}` (rôles `admin` et `user`) ; DTO `MessageDetail` et `Attachment`, `text` et `html` lus sur disque (fichier absent : `null`).
-- `INSERT IGNORE INTO message_reads` à chaque appel réussi.
+- `MessageController::show` → `MessageService::show` : route `GET /v1/messages/{id}` (rôles `admin` et `user`) ; DTO `MessageDetail` et `AttachmentInfo`, `text` et `html` lus par `MessageFiles` (fichier absent : `null`).
+- `MessageReadRepository` : `INSERT IGNORE INTO message_reads` à chaque appel réussi.
 
 ## Terminé quand
 

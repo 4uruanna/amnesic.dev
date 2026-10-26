@@ -9,7 +9,7 @@ Un dépôt valide devient un Message complet : fichiers sur disque, puis lignes 
 
 ## Contenu
 
-- Route `POST /v1/messages`, rôle `bot`.
+- `MessageController::deposit` → `MessageService::deposit` → `MessageFiles` puis `MessageRepository` : route `POST /v1/messages`, rôle `bot`.
 - Corps limité à 25 Mo : `413` sur `Content-Length` annoncé ou sur la taille réellement lue.
 - Écriture de `text`, `html` et `parts/{partId}` sous `storage/messages/{id}/`, puis insertion de `messages`, `recipients`, `attachments` dans une transaction ; si elle échoue, suppression du dossier.
 - Réponse `201`, `Location: /v1/messages/{id}`, `{ "id" }`.

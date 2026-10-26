@@ -128,9 +128,9 @@ Les champs de `MessageSummary` sauf `unread` (l'appel qui renvoie le détail mar
 |---|---|
 | `text` | string \| null |
 | `html` | string \| null |
-| `attachments` | `Attachment[]` |
+| `attachments` | `AttachmentInfo[]` |
 
-### `Attachment`
+### `AttachmentInfo`
 
 | Champ | Type |
 |---|---|
@@ -139,7 +139,7 @@ Les champs de `MessageSummary` sauf `unread` (l'appel qui renvoie le détail mar
 | `contentType` | string |
 | `size` | int : taille décodée, en octets |
 
-### `Account`
+### `AccountSummary`
 
 | Champ | Type |
 |---|---|
@@ -150,7 +150,7 @@ Les champs de `MessageSummary` sauf `unread` (l'appel qui renvoie le détail mar
 
 ### `AccountDetail` (réponse de `GET /v1/accounts/{id}`)
 
-Les champs d'`Account`, plus `addresses` (string[], les adresses des Bindings, triées) et `tokens` (`TokenInfo[]`, triés par `createdAt`).
+Les champs d'`AccountSummary`, plus `addresses` (string[], les adresses des Bindings, triées) et `tokens` (`TokenInfo[]`, triés par `createdAt`).
 
 ### `TokenInfo`
 
@@ -250,8 +250,8 @@ Toutes ces routes sont réservées au rôle `admin`. Le premier `admin` se crée
 
 | Endpoint | Entrée | Réponse | Erreurs propres |
 |---|---|---|---|
-| `POST /v1/accounts` | `AccountCreate` | `201`, `Location`, `Account` | `409` nom pris |
-| `GET /v1/accounts` | `offset`, `limit` | `200`, page d'`Account` triés par `name` | |
+| `POST /v1/accounts` | `AccountCreate` | `201`, `Location`, `AccountSummary` | `409` nom pris |
+| `GET /v1/accounts` | `offset`, `limit` | `200`, page d'`AccountSummary` triés par `name` | |
 | `GET /v1/accounts/{id}` | | `200`, `AccountDetail` | `404` |
 | `DELETE /v1/accounts/{id}` | | `204` ; supprime aussi ses Bindings, ses Jetons et ses lectures | `404` |
 | `POST /v1/accounts/{id}/bindings` | `BindingCreate` | `201`, `{ "address": "…" }` | `404` Compte ; `409` déjà lié ; `422` Compte `bot` |

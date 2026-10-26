@@ -9,8 +9,8 @@ La suppression définitive d'un Message, par un seul code que la purge réutilis
 
 ## Contenu
 
-- Route `DELETE /v1/messages/{id}` (rôles `admin` et `user` sur les siens).
-- Une fonction de suppression : la ligne `messages` (les cascades font le reste), puis le dossier `storage/messages/{id}/`.
+- `MessageController::delete` → `MessageService::delete` : route `DELETE /v1/messages/{id}` (rôles `admin` et `user` sur les siens).
+- La suppression vit dans `MessageService` : `MessageRepository` efface la ligne `messages` (les cascades font le reste), puis `MessageFiles` le dossier `storage/messages/{id}/`.
 
 ## Terminé quand
 
