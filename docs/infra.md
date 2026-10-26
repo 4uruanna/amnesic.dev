@@ -86,15 +86,15 @@ return [
 
 ## Développement local
 
+Le PHP du poste (8.5, sans `pdo_mysql`, `dom` ni `mbstring`) ne suffit pas : Composer et les tests tournent dans Docker, en PHP 8.4 comme en production. `composer.json` épingle aussi la plateforme à 8.4.0, pour que les dépendances restent installables sur OVH.
+
 ```sh
-docker run -d --name apimail-mysql -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD="$APIMAIL_DB_PASSWORD" -e MYSQL_DATABASE=apimail mysql:8.4
-php bin/migrate.php
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app composer:2 install
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app php:8.4-cli vendor/bin/phpunit
 php -S localhost:8080 -t public
-vendor/bin/phpunit
 ```
 
-`APIMAIL_DB_PASSWORD` est à définir dans ton shell. Les tests d'intégration tournent contre une base `apimail_test` du même conteneur.
+À partir de J01-2 : MySQL 8.4 dans un conteneur (`MYSQL_ROOT_PASSWORD` lu dans `APIMAIL_DB_PASSWORD`, à définir dans ton shell), une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), et les tests d'intégration contre une base `apimail_test`.
 
 ## Déploiement
 

@@ -13,7 +13,7 @@ curl -i http://api.<domaine>/v1/messages
 
 ## Phases
 
-- [ ] [J01-1 Squelette Slim](1-squelette-slim.md)
+- [x] [J01-1 Squelette Slim](1-squelette-slim.md)
 - [ ] [J01-2 Base et migrations](2-base-et-migrations.md)
 - [ ] [J01-3 Garde Bearer](3-garde-bearer.md)
 - [ ] [J01-4 Déploiement OVH](4-deploiement-ovh.md)

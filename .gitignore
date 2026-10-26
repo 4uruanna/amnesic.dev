@@ -2,3 +2,8 @@
 /node_modules/
 /config.php
 /storage/
+/.agents/
+/.claude/
+/skills-lock.json
+/package.json
+/pnpm-lock.yaml

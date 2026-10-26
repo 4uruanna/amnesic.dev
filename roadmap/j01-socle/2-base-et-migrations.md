@@ -13,6 +13,7 @@ Une connexion MySQL configurée par `config.php` et un outil de migration rejoua
 - Connexion PDO : `charset=utf8mb4`, `SET time_zone = '+00:00'`, `ERRMODE_EXCEPTION`, `EMULATE_PREPARES` à `false`.
 - `bin/migrate.php` : crée `schema_migrations` si besoin, puis applique dans l'ordre les `migrations/*.sql` qui n'y figurent pas, en notant chacun.
 - Base `apimail_test` et un utilitaire de test qui la vide et la remigre.
+- Environnement Docker local : MySQL 8.4 et une image PHP 8.4 avec `pdo_mysql` pour les tests et `bin/migrate.php` (ni `php:8.4-cli` ni le PHP du poste n'ont `pdo_mysql`) ; `infra.md` § Développement local mis à jour.
 
 ## Actions de ta part
 
