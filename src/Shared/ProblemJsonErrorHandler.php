@@ -35,6 +35,9 @@ final class ProblemJsonErrorHandler implements ErrorHandlerInterface
         if ($exception instanceof HttpMethodNotAllowedException) {
             $response = $response->withHeader('Allow', implode(', ', $exception->getAllowedMethods()));
         }
+        if ($status === 401) {
+            $response = $response->withHeader('WWW-Authenticate', 'Bearer');
+        }
         $response->getBody()->write(json_encode([
             'type' => 'about:blank',
             'title' => $response->getReasonPhrase(),
