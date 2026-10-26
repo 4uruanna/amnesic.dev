@@ -92,7 +92,7 @@ const API_MAIL_DB_PASSWORD = '';
 
 Le PHP du poste (8.5, sans `pdo_mysql`, `dom` ni `mbstring`) ne suffit pas : Composer et les tests tournent dans Docker, en PHP 8.4 comme en production. `composer.json` épingle aussi la plateforme à 8.4.0, pour que les dépendances restent installables sur OVH.
 
-`compose.yaml` décrit l'environnement des tests : MySQL 8.4, dont le mot de passe root est `API_MAIL_DB_PASSWORD` du `config.php` local et dont les données vivent en mémoire (perdues à l'arrêt), et une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), qui partage le réseau de MySQL. Le `config.php` local vise donc `127.0.0.1` avec l'utilisateur `root`.
+`compose.yaml` décrit l'environnement des tests : MySQL 8.4, dont le mot de passe root est `API_MAIL_DB_PASSWORD` du `config.php` local et dont les données vivent en mémoire (perdues à l'arrêt), et une image PHP 8.4 avec `pdo_mysql` (que `php:8.4-cli` n'a pas), qui partage le réseau de MySQL. Le `config.php` local vise donc `127.0.0.1` avec l'utilisateur `root`. MySQL y est réglé au plus juste (sans `performance_schema`, tampons et journal InnoDB minimaux, sans tables de fuseaux horaires) et limité à 192 Mio de RAM et un demi-CPU : environ 190 Mio au pic, données comprises, et une quinzaine de secondes de démarrage.
 
 ```sh
 docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app composer:2 install

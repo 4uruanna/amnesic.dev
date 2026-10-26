@@ -2,9 +2,19 @@
 services:
   mysql:
     image: mysql:8.4
+    # Réglé au plus juste pour les tests : environ 185 Mio au pic au lieu de 650, données en mémoire comprises.
+    command:
+      - --performance-schema=OFF
+      - --innodb-buffer-pool-size=8M
+      - --innodb-log-buffer-size=1M
+      - --innodb-redo-log-capacity=8M
+      - --innodb-doublewrite=OFF
     environment:
       MYSQL_ROOT_PASSWORD: ${API_MAIL_DB_PASSWORD:-}
       MYSQL_DATABASE: apimail_test
+      MYSQL_INITDB_SKIP_TZINFO: 1
+    cpus: 0.5
+    mem_limit: 192m
     ports:
       - 127.0.0.1:3306:3306
     tmpfs: /var/lib/mysql
