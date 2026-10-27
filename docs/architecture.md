@@ -33,6 +33,7 @@ src/
     Migrator.php               migrations/*.sql et schema_migrations
     Uuid.php                   UUIDv7
     JsonBody.php               lecture du corps JSON (400, 415)
+    MailAddress.php            adresse validée et mise en minuscules (api.md § Conventions)
     Page.php                   DTO de pagination ; bounds() lit offset et limit (422)
     NotFound.php, Conflict.php, ValidationFailed.php
     ProblemJsonErrorHandler.php

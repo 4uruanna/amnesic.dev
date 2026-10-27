@@ -11,5 +11,5 @@
 ## Phases
 
 - [x] [J03-1 Tables des Messages](1-tables-des-messages.md)
-- [ ] [J03-2 Validation du dépôt](2-validation-du-depot.md)
+- [x] [J03-2 Validation du dépôt](2-validation-du-depot.md)
 - [ ] [J03-3 Enregistrement du dépôt](3-enregistrement-du-depot.md)
