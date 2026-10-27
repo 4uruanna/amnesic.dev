@@ -12,7 +12,7 @@ La lecture des Messages selon les Bindings, le statut lu, le téléchargement de
 
 ## Phases
 
-- [ ] [J04-1 Liste des Messages](1-liste-des-messages.md)
+- [x] [J04-1 Liste des Messages](1-liste-des-messages.md)
 - [ ] [J04-2 Détail et marquage lu](2-detail-et-marquage-lu.md)
 - [ ] [J04-3 Pièces jointes](3-pieces-jointes.md)
 - [ ] [J04-4 Suppression](4-suppression.md)

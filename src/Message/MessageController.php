@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Apimail\Message;
 
 use Apimail\Message\Dto\MessageDeposit;
+use Apimail\Message\Dto\MessageFilter;
+use Apimail\Message\Dto\MessageSummary;
 use Apimail\Shared\JsonBody;
+use Apimail\Shared\Page;
 use JsonSerializable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,6 +25,15 @@ final class MessageController
         $message = $this->messages->deposit(MessageDeposit::fromArray(JsonBody::read($request)));
 
         return self::json($response->withStatus(201)->withHeader('Location', "/v1/messages/$message->id"), ['id' => $message->id]);
+    }
+
+    public function list(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $query = $request->getQueryParams();
+        [$offset, $limit] = Page::bounds($query);
+        [$messages, $total] = $this->messages->list($request->getAttribute('account'), MessageFilter::fromArray($query), $offset, $limit);
+
+        return self::json($response, new Page(array_map(fn (array $message) => MessageSummary::fromModel(...$message), $messages), $total, $offset, $limit));
     }
 
     /** @param array<string, mixed>|JsonSerializable $body */

@@ -24,8 +24,7 @@ final class RequireRoleTest extends TestCase
     {
         $app = new TestApp();
 
-        // GET /v1/messages admet admin et user ; il répond 501 jusqu'à J04-1.
-        self::assertSame(501, $app->request('GET', '/v1/messages', $app->token('admin'))->getStatusCode());
-        self::assertSame(501, $app->request('GET', '/v1/messages', $app->token('user'))->getStatusCode());
+        self::assertSame(200, $app->request('GET', '/v1/messages', $app->token('admin'))->getStatusCode());
+        self::assertSame(200, $app->request('GET', '/v1/messages', $app->token('user'))->getStatusCode());
     }
 }

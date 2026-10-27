@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Apimail\Message\Dto;
 
+use Apimail\Shared\Rfc3339;
 use Apimail\Shared\ValidationFailed;
 use DateTimeImmutable;
-use DateTimeZone;
 
 /** Entrée de POST /v1/messages : le mail déjà découpé par le Relais (ADR 0006). */
 final readonly class MessageDeposit
@@ -59,7 +59,7 @@ final readonly class MessageDeposit
         if (!is_string($subject) || mb_strlen($subject) > 998) {
             $errors[] = ['field' => 'subject', 'message' => 'Chaîne de 998 caractères au plus attendue.'];
         }
-        $sentAt = isset($data['sentAt']) ? self::date($data['sentAt']) : null;
+        $sentAt = isset($data['sentAt']) ? Rfc3339::parse($data['sentAt']) : null;
         if (isset($data['sentAt']) && $sentAt === null) {
             $errors[] = ['field' => 'sentAt', 'message' => 'Date RFC 3339 attendue.'];
         }
@@ -108,17 +108,5 @@ final readonly class MessageDeposit
 
             return null;
         }
-    }
-
-    /** Une date RFC 3339, quel que soit son décalage, ramenée en UTC ; null si elle est invalide. */
-    private static function date(mixed $value): ?DateTimeImmutable
-    {
-        if (!is_string($value) || preg_match('/\A(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)\z/i', $value, $m) !== 1) {
-            return null;
-        }
-        // createFromFormat lit 6 décimales au plus, et signale un 30 février ou un 25 h par un avertissement.
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s.u P', sprintf('%s %s.%s %s', $m[1], $m[2], substr(str_pad($m[3], 6, '0'), 0, 6), strtoupper($m[4])));
-
-        return $date === false || DateTimeImmutable::getLastErrors() !== false ? null : $date->setTimezone(new DateTimeZone('UTC'));
     }
 }

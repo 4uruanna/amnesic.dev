@@ -6,11 +6,12 @@ namespace Apimail\Message\Dto;
 
 use Apimail\Shared\MailAddress;
 use Apimail\Shared\ValidationFailed;
+use JsonSerializable;
 
-/** Une adresse de from ou de to ; l'adresse ressort en minuscules. */
-final readonly class Address
+/** Une adresse de from ou de to, en entrée (fromArray la valide et la met en minuscules) comme en sortie (MessageSummary). */
+final readonly class Address implements JsonSerializable
 {
-    private function __construct(
+    public function __construct(
         public string $address,
         public ?string $name,
     ) {
@@ -38,5 +39,10 @@ final readonly class Address
         }
 
         return new self($address, $name);
+    }
+
+    public function jsonSerialize(): array
+    {
+        return get_object_vars($this);
     }
 }

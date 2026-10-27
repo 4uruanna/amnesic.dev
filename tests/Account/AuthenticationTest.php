@@ -42,8 +42,7 @@ final class AuthenticationTest extends TestCase
 
     public function testKnownTokenReachesTheRoute(): void
     {
-        // GET /v1/messages répond 501 jusqu'à J04-1 : l'atteindre prouve que le jeton est accepté.
-        self::assertSame(501, $this->get('/v1/messages', 'Bearer ' . $this->app->token('admin'))->getStatusCode());
+        self::assertSame(200, $this->get('/v1/messages', 'Bearer ' . $this->app->token('admin'))->getStatusCode());
     }
 
     public function testAdminCreatedByTheInfraSqlIsAccepted(): void
@@ -57,7 +56,7 @@ final class AuthenticationTest extends TestCase
         }
         $token = $this->app->pdo->query($select)->fetch(PDO::FETCH_ASSOC)['token'];
 
-        self::assertSame(501, $this->get('/v1/messages', "Bearer $token")->getStatusCode());
+        self::assertSame(200, $this->get('/v1/messages', "Bearer $token")->getStatusCode());
     }
 
     public function testUnknownRouteIs404WithoutAuthentication(): void

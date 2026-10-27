@@ -51,9 +51,9 @@ final class MigratorTest extends TestCase
     {
         $pdo = TestDatabase::reset();
 
-        self::assertSame(['001_comptes.sql', '002_messages.sql'], $pdo->query('SELECT version FROM schema_migrations ORDER BY version')->fetchAll(PDO::FETCH_COLUMN));
+        self::assertSame(['001_comptes.sql', '002_messages.sql', '003_lectures.sql'], $pdo->query('SELECT version FROM schema_migrations ORDER BY version')->fetchAll(PDO::FETCH_COLUMN));
         self::assertSame(
-            ['accounts', 'attachments', 'bindings', 'messages', 'recipients', 'schema_migrations', 'tokens'],
+            ['accounts', 'attachments', 'bindings', 'message_reads', 'messages', 'recipients', 'schema_migrations', 'tokens'],
             $pdo->query('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY 1')
                 ->fetchAll(PDO::FETCH_COLUMN)
         );

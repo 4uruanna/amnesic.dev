@@ -19,7 +19,7 @@ final class SetupControllerTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-        self::assertSame(['applied' => ['001_comptes.sql', '002_messages.sql']], TestApp::json($response));
+        self::assertSame(['applied' => ['001_comptes.sql', '002_messages.sql', '003_lectures.sql']], TestApp::json($response));
         self::assertSame(0, (int) $app->pdo->query('SELECT COUNT(*) FROM accounts')->fetchColumn());
     }
 

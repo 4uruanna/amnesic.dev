@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Apimail\Message;
 
+use Apimail\Account\Model\Account;
 use Apimail\Message\Dto\Address;
 use Apimail\Message\Dto\AttachmentDeposit;
 use Apimail\Message\Dto\MessageDeposit;
+use Apimail\Message\Dto\MessageFilter;
 use Apimail\Message\Model\Attachment;
 use Apimail\Message\Model\Message;
 use Apimail\Message\Model\Recipient;
@@ -16,7 +18,7 @@ use DateTimeZone;
 use PDO;
 use Throwable;
 
-/** Dépôt des Messages. */
+/** Dépôt des Messages, et leur lecture selon les Bindings du Compte. */
 final class MessageService
 {
     public function __construct(
@@ -58,5 +60,24 @@ final class MessageService
         }
 
         return $message;
+    }
+
+    /**
+     * La page des Messages que le Compte voit, et leur nombre total.
+     *
+     * @return array{list<array{Message, list<Recipient>, bool, bool}>, int} chaque Message avec ses Destinataires, hasAttachments et unread
+     */
+    public function list(Account $account, MessageFilter $filter, int $offset, int $limit): array
+    {
+        [$rows, $total] = $this->messages->page($account->id, self::boundTo($account), $filter->to, $filter->since, $filter->unread, $offset, $limit);
+        $recipients = $this->messages->recipientsOf(array_map(fn (array $row) => $row[0]->id, $rows));
+
+        return [array_map(fn (array $row) => [$row[0], $recipients[$row[0]->id], $row[1], $row[2]], $rows), $total];
+    }
+
+    /** Le Compte dont les Bindings bornent ce que voit $account : aucun pour un admin, qui voit tout (api.md § Authentification et permissions). */
+    private static function boundTo(Account $account): ?string
+    {
+        return $account->role === 'admin' ? null : $account->id;
     }
 }

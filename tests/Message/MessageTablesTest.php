@@ -25,7 +25,7 @@ final class MessageTablesTest extends TestCase
             rmdir($directory);
         }
 
-        self::assertSame(['002_messages.sql'], (new Migrator($pdo))->migrate());
+        self::assertSame(['002_messages.sql', '003_lectures.sql'], (new Migrator($pdo))->migrate());
     }
 
     public function testDeletingAMessageDeletesItsRecipientsAndAttachments(): void
@@ -47,5 +47,23 @@ final class MessageTablesTest extends TestCase
                 $table
             );
         }
+    }
+
+    public function testReadsGoAwayWithTheirMessageOrTheirAccount(): void
+    {
+        $pdo = TestDatabase::reset();
+        [$ci, $ops, $kept, $deleted] = [Uuid::v7(), Uuid::v7(), Uuid::v7(), Uuid::v7()];
+        foreach ([$ci => 'ci', $ops => 'ops'] as $id => $name) {
+            $pdo->prepare('INSERT INTO accounts (id, name, role, created_at) VALUES (?, ?, \'user\', UTC_TIMESTAMP(3))')->execute([$id, $name]);
+        }
+        foreach ([$kept, $deleted] as $id) {
+            $pdo->prepare('INSERT INTO messages (id, from_address, received_at) VALUES (?, \'noreply@x.tld\', UTC_TIMESTAMP(3))')->execute([$id]);
+            $pdo->prepare('INSERT INTO message_reads (account_id, message_id) VALUES (?, ?), (?, ?)')->execute([$ci, $id, $ops, $id]);
+        }
+
+        $pdo->prepare('DELETE FROM messages WHERE id = ?')->execute([$deleted]);
+        $pdo->prepare('DELETE FROM accounts WHERE id = ?')->execute([$ops]);
+
+        self::assertSame([[$ci, $kept]], $pdo->query('SELECT account_id, message_id FROM message_reads')->fetchAll(PDO::FETCH_NUM));
     }
 }

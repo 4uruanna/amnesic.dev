@@ -24,7 +24,8 @@ src/
     MessageReadRepository.php  table message_reads
     MessageFiles.php           storage/messages/{id}/
     Model/                     Message, Recipient, Attachment
-    Dto/                       MessageDeposit, Address, AttachmentDeposit,
+    Dto/                       MessageDeposit, Address (entrée et sortie), AttachmentDeposit,
+                               MessageFilter (to, since, unread de GET /v1/messages),
                                MessageSummary, MessageDetail, AttachmentInfo
   Setup/
     SetupController.php        GET /v1/setup (jeton admin dans l'URL, ou base vide)
@@ -34,6 +35,7 @@ src/
     Uuid.php                   UUIDv7
     JsonBody.php               lecture du corps JSON (400, 413, 415)
     MailAddress.php            adresse validée et mise en minuscules (api.md § Conventions)
+    Rfc3339.php                date d'entrée RFC 3339, ramenée en UTC (api.md § Conventions)
     Page.php                   DTO de pagination ; bounds() lit offset et limit (422)
     NotFound.php, Conflict.php, ValidationFailed.php
     ProblemJsonErrorHandler.php

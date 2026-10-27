@@ -218,7 +218,7 @@ final class AccountControllerTest extends TestCase
         self::assertSame([$created], TestApp::json($this->app->request('GET', "/v1/accounts/$id", $this->admin))['tokens']);
 
         $token = TestApp::json($response)['token'];
-        self::assertSame(501, $this->app->request('GET', '/v1/messages', $token)->getStatusCode());
+        self::assertSame(200, $this->app->request('GET', '/v1/messages', $token)->getStatusCode());
 
         self::assertSame(204, $this->app->request('DELETE', "/v1/accounts/$id/tokens/{$created['id']}", $this->admin)->getStatusCode());
         self::assertSame(401, $this->app->request('GET', '/v1/messages', $token)->getStatusCode());

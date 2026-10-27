@@ -9,8 +9,6 @@ use Apimail\Message\MessageController;
 use Apimail\Setup\SetupController;
 use Apimail\Shared\ProblemJsonErrorHandler;
 use Apimail\Shared\SecurityHeaders;
-use Psr\Http\Message\ServerRequestInterface;
-use Slim\Exception\HttpNotImplementedException;
 use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -27,10 +25,7 @@ $app->get('/v1/setup', [SetupController::class, 'migrate']);
 
 $app->group('/v1', function (RouteCollectorProxy $v1): void {
     $v1->post('/messages', [MessageController::class, 'deposit'])->add(new RequireRole('bot'));
-    // Remplacée par MessageController en J04-1.
-    $v1->get('/messages', function (ServerRequestInterface $request): never {
-        throw new HttpNotImplementedException($request);
-    })->add(new RequireRole('admin', 'user'));
+    $v1->get('/messages', [MessageController::class, 'list'])->add(new RequireRole('admin', 'user'));
 
     $v1->group('/accounts', function (RouteCollectorProxy $accounts): void {
         $accounts->post('', [AccountController::class, 'create']);
