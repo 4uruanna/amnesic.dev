@@ -148,6 +148,92 @@ final class AccountControllerTest extends TestCase
         self::assertSame(0, (int) $remaining->fetchColumn());
     }
 
+    public function testBindingIsStoredInLowercase(): void
+    {
+        $id = $this->create('ci', 'user');
+
+        $response = $this->app->request('POST', "/v1/accounts/$id/bindings", $this->admin, ['address' => 'Ci@X.tld']);
+
+        self::assertSame(201, $response->getStatusCode());
+        self::assertSame(['address' => 'ci@x.tld'], TestApp::json($response));
+        self::assertSame(['ci@x.tld'], TestApp::json($this->app->request('GET', "/v1/accounts/$id", $this->admin))['addresses']);
+    }
+
+    public function testBindingAlreadyPresentIs409(): void
+    {
+        $id = $this->create('ci', 'user');
+        $this->app->request('POST', "/v1/accounts/$id/bindings", $this->admin, ['address' => 'ci@x.tld']);
+
+        $response = $this->app->request('POST', "/v1/accounts/$id/bindings", $this->admin, ['address' => 'CI@x.tld']);
+
+        self::assertProblem($response, 409, 'Adresse déjà liée à ce Compte.');
+    }
+
+    public function testBindingOnABotIs422(): void
+    {
+        $id = $this->create('relais-mx', 'bot');
+
+        $response = $this->app->request('POST', "/v1/accounts/$id/bindings", $this->admin, ['address' => 'ci@x.tld']);
+
+        self::assertProblem($response, 422, 'Un Compte bot ne reçoit pas de Binding.');
+        self::assertSame([['field' => '', 'message' => 'Un Compte bot ne reçoit pas de Binding.']], TestApp::json($response)['errors']);
+    }
+
+    public function testUnbind(): void
+    {
+        $id = $this->create('ci', 'user');
+        $this->app->request('POST', "/v1/accounts/$id/bindings", $this->admin, ['address' => 'ci@x.tld']);
+
+        // L'adresse du chemin se compare en minuscules, encodée ou non.
+        $response = $this->app->request('DELETE', "/v1/accounts/$id/bindings/CI%40X.tld", $this->admin);
+
+        self::assertSame(204, $response->getStatusCode());
+        self::assertSame([], TestApp::json($this->app->request('GET', "/v1/accounts/$id", $this->admin))['addresses']);
+        self::assertProblem($this->app->request('DELETE', "/v1/accounts/$id/bindings/ci@x.tld", $this->admin), 404, 'Binding introuvable.');
+    }
+
+    public function testBindingOrTokenOfAnUnknownAccountIs404(): void
+    {
+        $unknown = Uuid::v7();
+
+        self::assertProblem($this->app->request('POST', "/v1/accounts/$unknown/bindings", $this->admin, ['address' => 'ci@x.tld']), 404, 'Compte introuvable.');
+        self::assertProblem($this->app->request('DELETE', "/v1/accounts/$unknown/bindings/ci@x.tld", $this->admin), 404, 'Binding introuvable.');
+        self::assertProblem($this->app->request('POST', "/v1/accounts/$unknown/tokens", $this->admin, ['name' => 'ci']), 404, 'Compte introuvable.');
+    }
+
+    public function testIssuedTokenAuthenticatesUntilRevoked(): void
+    {
+        $id = $this->create('ci', 'user');
+
+        $response = $this->app->request('POST', "/v1/accounts/$id/tokens", $this->admin, ['name' => 'ci']);
+
+        self::assertSame(201, $response->getStatusCode());
+        $created = TestApp::json($response);
+        self::assertSame(['id', 'name', 'createdAt', 'token'], array_keys($created));
+        self::assertMatchesRegularExpression(self::UUID, $created['id']);
+        self::assertSame('ci', $created['name']);
+        self::assertMatchesRegularExpression(self::DATE, $created['createdAt']);
+        self::assertMatchesRegularExpression('/\A[0-9a-f]{64}\z/', $created['token']);
+        unset($created['token']);
+        self::assertSame([$created], TestApp::json($this->app->request('GET', "/v1/accounts/$id", $this->admin))['tokens']);
+
+        $token = TestApp::json($response)['token'];
+        self::assertSame(501, $this->app->request('GET', '/v1/messages', $token)->getStatusCode());
+
+        self::assertSame(204, $this->app->request('DELETE', "/v1/accounts/$id/tokens/{$created['id']}", $this->admin)->getStatusCode());
+        self::assertSame(401, $this->app->request('GET', '/v1/messages', $token)->getStatusCode());
+        self::assertProblem($this->app->request('DELETE', "/v1/accounts/$id/tokens/{$created['id']}", $this->admin), 404, 'Jeton introuvable.');
+    }
+
+    public function testTokenOfAnotherAccountIs404(): void
+    {
+        $ci = $this->create('ci', 'user');
+        $other = $this->create('other', 'user');
+        $tokenId = $this->addToken($other, 'other', '2026-10-27 09:00:00.000');
+
+        self::assertProblem($this->app->request('DELETE', "/v1/accounts/$ci/tokens/$tokenId", $this->admin), 404, 'Jeton introuvable.');
+    }
+
     /** @return iterable<string, array{string}> */
     public static function nonAdminRoles(): iterable
     {
@@ -167,6 +253,10 @@ final class AccountControllerTest extends TestCase
             ['GET', "/v1/accounts/$id", null],
             ['GET', '/v1/accounts/' . Uuid::v7(), null], // 403 avant 404
             ['DELETE', "/v1/accounts/$id", null],
+            ['POST', "/v1/accounts/$id/bindings", ['address' => 'ci@x.tld']],
+            ['DELETE', "/v1/accounts/$id/bindings/ci@x.tld", null],
+            ['POST', "/v1/accounts/$id/tokens", ['name' => 'ci']],
+            ['DELETE', "/v1/accounts/$id/tokens/" . Uuid::v7(), null],
         ] as [$method, $path, $body]) {
             self::assertProblem($this->app->request($method, $path, $token, $body), 403, 'Rôle non autorisé.');
         }

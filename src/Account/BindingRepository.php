@@ -12,6 +12,20 @@ final class BindingRepository
     {
     }
 
+    public function insert(string $accountId, string $address): void
+    {
+        $this->pdo->prepare('INSERT INTO bindings (account_id, address) VALUES (?, ?)')->execute([$accountId, $address]);
+    }
+
+    /** Faux si ce Binding n'existait pas. */
+    public function delete(string $accountId, string $address): bool
+    {
+        $delete = $this->pdo->prepare('DELETE FROM bindings WHERE account_id = ? AND address = ?');
+        $delete->execute([$accountId, $address]);
+
+        return $delete->rowCount() > 0;
+    }
+
     /** @return list<string> les adresses liées au Compte, triées */
     public function addressesOf(string $accountId): array
     {

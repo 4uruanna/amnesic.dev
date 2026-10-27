@@ -35,6 +35,10 @@ $app->group('/v1', function (RouteCollectorProxy $v1): void {
         $accounts->get('', [AccountController::class, 'list']);
         $accounts->get('/{id}', [AccountController::class, 'show']);
         $accounts->delete('/{id}', [AccountController::class, 'delete']);
+        $accounts->post('/{id}/bindings', [AccountController::class, 'bind']);
+        $accounts->delete('/{id}/bindings/{address}', [AccountController::class, 'unbind']);
+        $accounts->post('/{id}/tokens', [AccountController::class, 'issueToken']);
+        $accounts->delete('/{id}/tokens/{tokenId}', [AccountController::class, 'revokeToken']);
     })->add(new RequireRole('admin'));
 })->add(Authentication::class);
 

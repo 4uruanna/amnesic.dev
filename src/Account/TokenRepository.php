@@ -16,6 +16,21 @@ final class TokenRepository
     {
     }
 
+    public function insert(Token $token): void
+    {
+        $this->pdo->prepare('INSERT INTO tokens (id, account_id, name, hash, created_at) VALUES (?, ?, ?, ?, ?)')
+            ->execute([$token->id, $token->accountId, $token->name, $token->hash, $token->createdAt->format('Y-m-d H:i:s.v')]);
+    }
+
+    /** Révoque le Jeton ; faux s'il n'existait pas pour ce Compte. */
+    public function delete(string $accountId, string $id): bool
+    {
+        $delete = $this->pdo->prepare('DELETE FROM tokens WHERE id = ? AND account_id = ?');
+        $delete->execute([$id, $accountId]);
+
+        return $delete->rowCount() > 0;
+    }
+
     /** Le Compte dont un Jeton a cette empreinte SHA-256. */
     public function findAccountByHash(string $hash): ?Account
     {
