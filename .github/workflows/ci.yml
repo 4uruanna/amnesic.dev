@@ -1,0 +1,79 @@
+# Tests à chaque push et pull request ; sur main, publication de la branche ovh (docs/infra.md § Déploiement).
+name: CI
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+# Sur une même branche, un push annule le run du précédent : un ancien commit ne publie jamais après un récent.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci # mot de passe jetable du conteneur de CI, pas un secret
+          MYSQL_DATABASE: apimail_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 --silent" --health-interval=2s --health-retries=60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Write config.php
+        run: |
+          cat > config.php <<'PHP'
+          <?php
+
+          declare(strict_types=1);
+
+          const API_MAIL_DB_HOST = '127.0.0.1';
+          const API_MAIL_DB_NAME = 'apimail_test';
+          const API_MAIL_DB_USER = 'root';
+          const API_MAIL_DB_PASSWORD = 'ci';
+          PHP
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit
+
+  publish:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+      - name: Commit on ovh
+        run: |
+          # Un run relancé sur un commit qui n'est plus la tête de main ne doit pas faire reculer ovh.
+          main=$(git ls-remote --exit-code origin refs/heads/main)
+          if [ "${main%%[[:space:]]*}" != "$GITHUB_SHA" ]; then
+            echo "main n'est plus en $GITHUB_SHA : rien à publier."
+            exit 0
+          fi
+          printf '/config.php\n/storage/\n' > .gitignore
+          export GIT_INDEX_FILE="$RUNNER_TEMP/ovh-index"
+          for path in .htaccess .ovhconfig public src bin migrations vendor config.template.php composer.json composer.lock .gitignore; do
+            if [ -e "$path" ]; then git add --force -- "$path"; fi
+          done
+          tree=$(git write-tree)
+          # Le commit s'ajoute au précédent, jamais de push forcé ; ovh est créée au premier passage.
+          if git fetch --depth=1 origin ovh; then set -- -p FETCH_HEAD; fi
+          commit=$(git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit-tree "$tree" "$@" -m "build: publish main@$GITHUB_SHA")
+          git push origin "$commit:refs/heads/ovh"
