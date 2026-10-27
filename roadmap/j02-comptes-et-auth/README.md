@@ -11,6 +11,6 @@ Les Comptes, leurs Jetons et leurs Bindings, l'authentification réelle et le co
 ## Phases
 
 - [x] [J02-1 Tables des comptes](1-tables-des-comptes.md)
-- [ ] [J02-2 Authentification par jeton](2-authentification-par-jeton.md)
+- [x] [J02-2 Authentification par jeton](2-authentification-par-jeton.md)
 - [ ] [J02-3 Endpoints comptes](3-endpoints-comptes.md)
 - [ ] [J02-4 Bindings et jetons](4-bindings-et-jetons.md)

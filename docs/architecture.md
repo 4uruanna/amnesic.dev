@@ -62,7 +62,7 @@ tests/                         même arborescence que src/
 
 - Controller → Service → Repository → Model, jamais dans l'autre sens. Un Controller n'appelle pas un Repository.
 - `Message` peut utiliser `Account` (le Model du Compte connecté, `RequireRole`), jamais l'inverse.
-- `Setup` peut utiliser `Account` (vérifier le jeton admin) et `Shared\Migrator` ; aucun autre dossier n'utilise `Setup`.
+- `Setup` peut utiliser `Account` (vérifier le jeton admin par `Authentication::authenticate()`) et `Shared\Migrator` ; aucun autre dossier n'utilise `Setup`.
 - `Shared` ne dépend d'aucun autre dossier de `src/`.
 
 ## Erreurs
@@ -91,5 +91,5 @@ tests/                         même arborescence que src/
 ## Tests
 
 - **Unitaires** : chaque règle des DTO de requête, `Uuid`.
-- **Intégration** : par `$app->handle()` contre la base `apimail_test`, qui couvre ensemble Controller, Service et Repository. Pas de mocks.
+- **Intégration** : par `$app->handle()` contre la base `apimail_test` (`tests/TestApp.php` y branche l'application), qui couvre ensemble Controller, Service et Repository. Pas de mocks.
 - `tests/` reprend l'arborescence de `src/` (`tests/Account/…`, `tests/Message/…`, `tests/Shared/…`).

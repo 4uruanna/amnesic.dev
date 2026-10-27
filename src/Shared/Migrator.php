@@ -16,6 +16,14 @@ final class Migrator
     ) {
     }
 
+    /** Faux tant que schema_migrations n'existe pas : la base est vide. */
+    public function isInstalled(): bool
+    {
+        return $this->pdo->query(
+            'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = \'schema_migrations\''
+        )->fetchColumn() > 0;
+    }
+
     /** @return list<string> les fichiers appliqués, dans l'ordre */
     public function migrate(): array
     {

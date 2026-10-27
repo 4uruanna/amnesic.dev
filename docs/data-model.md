@@ -150,7 +150,7 @@ INSERT IGNORE INTO message_reads (account_id, message_id) VALUES (:account, :mes
 Authentification :
 
 ```sql
-SELECT a.id, a.role FROM tokens t JOIN accounts a ON a.id = t.account_id WHERE t.hash = :sha256;
+SELECT a.id, a.name, a.role, a.created_at FROM tokens t JOIN accounts a ON a.id = t.account_id WHERE t.hash = :sha256;
 ```
 
 Purge, par lots de 500 jusqu'à épuisement :

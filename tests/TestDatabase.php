@@ -14,6 +14,15 @@ final class TestDatabase
     /** Vide la base, puis lui applique migrations/. */
     public static function reset(): PDO
     {
+        $pdo = self::empty();
+        (new Migrator($pdo))->migrate();
+
+        return $pdo;
+    }
+
+    /** Vide la base, sans même schema_migrations : l'état d'une installation neuve. */
+    public static function empty(): PDO
+    {
         require_once __DIR__ . '/../config.php';
         $pdo = Database::connect(API_MAIL_DB_HOST, 'apimail_test', API_MAIL_DB_USER, API_MAIL_DB_PASSWORD);
 
@@ -24,7 +33,6 @@ final class TestDatabase
             $pdo->exec('DROP TABLE `' . implode('`, `', $tables) . '`');
             $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
         }
-        (new Migrator($pdo))->migrate();
 
         return $pdo;
     }
