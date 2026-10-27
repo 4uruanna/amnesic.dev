@@ -5,7 +5,7 @@
 
 ## Objectif
 
-L'API tourne sur `https://www.amnesic.dev`, déployée par l'intégration Git d'OVH depuis la branche `ovh`, sans que les déploiements touchent aux données du serveur.
+L'API tourne sur `https://www.api.amnesic.dev`, déployée par l'intégration Git d'OVH depuis la branche `ovh`, sans que les déploiements touchent aux données du serveur.
 
 ## Contenu
 
@@ -13,12 +13,12 @@ L'API tourne sur `https://www.amnesic.dev`, déployée par l'intégration Git d'
 
 ## Actions de ta part
 
-- Control Panel : la base MySQL 8.4 ; sur la ligne `www.amnesic.dev` de « Mes sites », SSL actif, pare-feu applicatif désactivé, dossier vidé.
+- Control Panel : la base MySQL 8.4 ; sur la ligne `www.api.amnesic.dev` de « Mes sites », SSL actif, pare-feu applicatif désactivé, dossier vidé.
 - « Lier Git » sur la branche `ovh`, avec la clé SSH d'OVH en deploy key du dépôt (lecture seule) et le webhook.
 - `www/config.php`, copié de `config.template.php` et rempli par toi.
 
 ## Terminé quand
 
 - La démo de sortie de J01 passe.
-- `https://www.amnesic.dev/.git/config`, `/config.php` et `/src/app.php` répondent `404`.
+- `https://www.api.amnesic.dev/.git/config`, `/config.php` et `/src/app.php` répondent `404`.
 - Un fichier témoin dans `www/storage/` et `www/config.php` survivent à un déploiement par webhook, puis à un « Deploy Git » forcé.

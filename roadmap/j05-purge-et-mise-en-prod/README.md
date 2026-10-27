@@ -5,7 +5,7 @@ La purge horaire des Messages de plus de 30 jours, sa tâche cron sur OVH, et la
 ## Démo de sortie
 
 1. En production, reculer de 31 jours le `received_at` d'un Message de test (SQL) : il disparaît, fichiers compris, à l'heure suivante ; le log cron d'OVH affiche `purged 1`.
-2. Le scénario de [J05-3](3-recette.md) passe de bout en bout sur `https://www.amnesic.dev`.
+2. Le scénario de [J05-3](3-recette.md) passe de bout en bout sur `https://www.api.amnesic.dev`.
 
 ## Phases
 

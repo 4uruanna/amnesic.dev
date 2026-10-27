@@ -12,7 +12,7 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
 
 ## Conventions
 
-- **URL de base** : `https://www.amnesic.dev/v1`. HTTPS seulement : une requête en HTTP reçoit une redirection `301` (qu'un client ne doit pas suivre pour un `POST`, il appelle directement en HTTPS).
+- **URL de base** : `https://www.api.amnesic.dev/v1`. HTTPS seulement : une requête en HTTP reçoit une redirection `301` (qu'un client ne doit pas suivre pour un `POST`, il appelle directement en HTTPS).
 - **Format** : JSON UTF-8. Un corps de requête porte `Content-Type: application/json`, sinon `415`. Un JSON mal formé reçoit `400`.
 - **Champs inconnus** : refusés (`422`) dans tout corps de requête, à tous les niveaux. Les paramètres de requête inconnus sont ignorés.
 - **Dates** : ISO 8601 / RFC 3339. En entrée, tout décalage horaire est accepté ; en sortie, toujours UTC à la milliseconde : `2026-10-26T09:59:58.000Z`.
@@ -269,7 +269,7 @@ Un `admin` peut supprimer son propre Compte ou le Jeton qu'il utilise ; s'il ne 
 
 Applique les migrations SQL en attente ([ADR 0013](adr/0013-migrations-par-get-setup.md)). Prévu pour être ouvert dans un navigateur après un déploiement.
 
-- **Authentification** : le jeton d'un Compte `admin` dans le paramètre `token` : `https://www.amnesic.dev/v1/setup?token=<64 hex>`. C'est la seule route qui accepte un jeton dans l'URL, et elle n'accepte pas l'en-tête `Authorization`. Jeton absent ou invalide : `401` ; Compte qui n'est pas `admin` : `403`.
+- **Authentification** : le jeton d'un Compte `admin` dans le paramètre `token` : `https://www.api.amnesic.dev/v1/setup?token=<64 hex>`. C'est la seule route qui accepte un jeton dans l'URL, et elle n'accepte pas l'en-tête `Authorization`. Jeton absent ou invalide : `401` ; Compte qui n'est pas `admin` : `403`.
 - **Installation** : tant que la base est vide (la table `schema_migrations` n'existe pas), la route fonctionne sans jeton.
 - **Concurrence** : un verrou MySQL (`GET_LOCK`) fait attendre un second appel simultané, qui n'applique ensuite rien.
 - **Réponse** : `200`, `{ "applied": ["001_comptes.sql", "002_messages.sql"] }`, liste vide s'il n'y avait rien à appliquer.

@@ -18,7 +18,7 @@ apimail V1 : une API PHP (Slim 4, MySQL 8.4) sur l'Hébergement Web Pro OVH, qui
 
 | Milestone | Démo de sortie | Phases |
 |:---|:---|---:|
-| [J01 Socle](j01-socle/README.md) | `curl https://www.amnesic.dev/v1/messages` avec un jeton bidon reçoit `401` « jeton invalide » en `problem+json` : l'en-tête `Authorization` arrive à PHP | 6 |
+| [J01 Socle](j01-socle/README.md) | `curl https://www.api.amnesic.dev/v1/messages` avec un jeton bidon reçoit `401` « jeton invalide » en `problem+json` : l'en-tête `Authorization` arrive à PHP | 6 |
 | [J02 Comptes et auth](j02-comptes-et-auth/README.md) | un admin créé en SQL crée un bot, un user, leurs jetons et un Binding | 4 |
 | [J03 Dépôt](j03-depot/README.md) | le bot dépose un Message avec une pièce jointe ; un `cc` reçoit `422` | 3 |
 | [J04 Lecture et suppression](j04-lecture-et-suppression/README.md) | un user lit ses Messages ; celui d'un autre Compte lui répond `404` | 4 |

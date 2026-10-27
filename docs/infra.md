@@ -1,6 +1,6 @@
 # Infrastructure
 
-L'API est le site principal, `https://www.amnesic.dev`, d'un Hébergement Web Pro OVHcloud. Elle y est déployée par l'intégration Git d'OVH depuis la branche `ovh`, construite par une GitHub Action ([ADR 0012](adr/0012-deploiement-git-ovh.md)). Les constantes de l'offre ont été relevées le 2026-10-26 dans la doc OVH (docs.ovhcloud.com) ; elles peuvent changer.
+L'API est le site principal, `https://www.api.amnesic.dev`, d'un Hébergement Web Pro OVHcloud. Elle y est déployée par l'intégration Git d'OVH depuis la branche `ovh`, construite par une GitHub Action ([ADR 0012](adr/0012-deploiement-git-ovh.md)). Les constantes de l'offre ont été relevées le 2026-10-26 dans la doc OVH (docs.ovhcloud.com) ; elles peuvent changer.
 
 ## Contraintes de l'offre Pro
 
@@ -23,7 +23,7 @@ L'API est le site principal, `https://www.amnesic.dev`, d'un Hébergement Web Pr
 
 ```
 /                       racine FTP ; /.ovhconfig inchangé (stable64)
-/www/                   dossier du site www.amnesic.dev = clone de la branche ovh
+/www/                   dossier du site www.api.amnesic.dev = clone de la branche ovh
   .htaccess             tout vers public/index.php
   .ovhconfig            app.engine.version=8.4
   public/index.php
@@ -38,13 +38,13 @@ L'API est le site principal, `https://www.amnesic.dev`, d'un Hébergement Web Pr
 ## Mise en place (une fois)
 
 1. **Base** : Bases de données → créer une base MySQL 8.4 dédiée à l'API. Noter l'hôte (`<base>.mysql.db`), le nom et l'utilisateur ; le mot de passe, tu le saisis toi-même dans `config.php`.
-2. **Site** : dans « Mes sites », la ligne `www.amnesic.dev` : SSL Let's Encrypt actif, **pare-feu applicatif désactivé**. Vider son dossier (`www/`), après avoir sauvegardé ce qu'il contient : OVH n'associe Git qu'à un dossier vide.
+2. **Site** : dans « Mes sites », la ligne `www.api.amnesic.dev` : SSL Let's Encrypt actif, **pare-feu applicatif désactivé**. Vider son dossier (`www/`), après avoir sauvegardé ce qu'il contient : OVH n'associe Git qu'à un dossier vide.
 3. **GitHub** : dépôt privé `apimail` ; la GitHub Action y crée la branche `ovh` au premier push sur `main`.
-4. **Lier Git** : « Mes sites » → `www.amnesic.dev` → ⁝ → « Lier Git » : dépôt `git@github.com:<compte>/apimail.git`, branche `ovh`.
+4. **Lier Git** : « Mes sites » → `www.api.amnesic.dev` → ⁝ → « Lier Git » : dépôt `git@github.com:<compte>/apimail.git`, branche `ovh`.
    - **Clé SSH** : copier celle qu'affiche OVH et l'ajouter dans GitHub → dépôt `apimail` → Settings → **Deploy keys**, sans droit d'écriture. Le guide OVH propose de l'ajouter aux clés du compte : elle ouvrirait alors à OVH tous les dépôts du compte, en écriture.
    - **Webhook** : copier l'URL qu'affiche OVH et l'ajouter dans GitHub → dépôt `apimail` → Settings → Webhooks, événement `push`.
 5. **Configuration** : une fois l'association active, copier `www/config.template.php` en `www/config.php` (FTP ou SSH) et le remplir.
-6. **Installation** : quand `001_comptes.sql` est déployée (J02), ouvrir `https://www.amnesic.dev/v1/setup` (sans jeton : la base est vide), puis [créer un admin](#créer-un-admin).
+6. **Installation** : quand `001_comptes.sql` est déployée (J02), ouvrir `https://www.api.amnesic.dev/v1/setup` (sans jeton : la base est vide), puis [créer un admin](#créer-un-admin).
 7. **Cron** : voir [Purge](#purge).
 
 ### `.ovhconfig`
@@ -112,7 +112,7 @@ Pas de script de déploiement. Un changement va en production ainsi :
 1. fusion de `dev` dans `main`, puis push sur GitHub ;
 2. la GitHub Action (`.github/workflows/ci.yml`) lance PHPUnit en PHP 8.4 avec un service MySQL 8.4. Si les tests passent, elle construit `vendor/` sans les dépendances de dev et ajoute sur `ovh` un commit qui ne contient que ce qui tourne : `.htaccess`, `.ovhconfig`, `public/`, `src/`, `bin/`, `migrations/`, `vendor/`, `config.template.php`, `composer.json`, `composer.lock`, et un `.gitignore` qui couvre `config.php` et `storage/`. Ce commit, dont le message porte le SHA de `main`, s'ajoute au précédent, même si rien de publié n'a changé : `ovh` n'est jamais poussée en force, donc le `git pull` d'OVH ne rencontre pas de conflit. Un push annule le run encore en cours du push précédent sur la même branche, et un run relancé sur un commit qui n'est plus la tête de `main` ne publie rien ;
 3. le webhook prévient OVH, qui fait un `git pull` de `ovh` dans `www/` ; à défaut, « Mes sites » → ⁝ → « Deploy Git ». `config.php` et `storage/`, ignorés par git, ne sont pas touchés ;
-4. si le déploiement apporte une migration : ouvrir `https://www.amnesic.dev/v1/setup?token=<jeton admin>`.
+4. si le déploiement apporte une migration : ouvrir `https://www.api.amnesic.dev/v1/setup?token=<jeton admin>`.
 
 Sur un push ou une pull request vers une autre branche, l'Action lance seulement les tests. Ne jamais modifier sur le serveur un fichier suivi par git : la case « forcer » de « Deploy Git » l'écraserait.
 
