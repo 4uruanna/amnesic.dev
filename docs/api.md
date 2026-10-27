@@ -55,7 +55,7 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
   | `404` | route inconnue, ou ressource qui n'existe pas **ou** que le Compte ne voit pas (l'API ne distingue jamais les deux) |
   | `405` | méthode non permise sur cette route |
   | `409` | nom de Compte ou Binding déjà existant |
-  | `413` | corps de plus de 25 Mo |
+  | `413` | corps de plus de 25 Mio (26 214 400 octets), annoncé par `Content-Length` ou réellement lu |
   | `415` | corps qui n'est pas `application/json` |
   | `422` | corps ou paramètre invalide |
   | `500` | erreur interne, sans détail technique dans la réponse |

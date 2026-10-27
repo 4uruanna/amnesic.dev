@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apimail\Tests;
 
+use Apimail\Message\MessageFiles;
 use Apimail\Shared\Uuid;
 use PDO;
 use Psr\Http\Message\ResponseInterface;
@@ -11,17 +12,20 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use Slim\Psr7\Factory\ServerRequestFactory;
 
-/** L'application branchée sur apimail_test (remise à neuf par défaut), et de quoi l'appeler. */
+/** L'application branchée sur apimail_test (remise à neuf par défaut) et sur un storage/ temporaire, et de quoi l'appeler. */
 final class TestApp
 {
     public readonly PDO $pdo;
+    public readonly string $storage;
     private readonly App $app;
 
     public function __construct(?PDO $pdo = null)
     {
         $this->pdo = $pdo ?? TestDatabase::reset();
+        $this->storage = sys_get_temp_dir() . '/apimail-storage-' . bin2hex(random_bytes(4));
         $this->app = require __DIR__ . '/../src/app.php';
         $this->app->getContainer()->set(PDO::class, $this->pdo);
+        $this->app->getContainer()->set(MessageFiles::class, new MessageFiles($this->storage));
     }
 
     /** Crée en base un Compte de ce rôle avec un Jeton, et renvoie le secret du Jeton. */

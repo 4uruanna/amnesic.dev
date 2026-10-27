@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Apimail\Message\MessageFiles;
 use Apimail\Shared\Database;
 use DI\ContainerBuilder;
 
@@ -13,5 +14,7 @@ require_once __DIR__ . '/../config.php';
 return (new ContainerBuilder())
     ->addDefinitions([
         PDO::class => fn () => Database::connect(API_MAIL_DB_HOST, API_MAIL_DB_NAME, API_MAIL_DB_USER, API_MAIL_DB_PASSWORD),
+        // storage/ est toujours le voisin de config.php (infra.md § config.php).
+        MessageFiles::class => fn () => new MessageFiles(__DIR__ . '/../storage'),
     ])
     ->build();

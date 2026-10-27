@@ -37,8 +37,11 @@ final class ProblemJsonErrorHandler implements ErrorHandlerInterface
         }
 
         $response = new Response($status);
-        if ($status === 422) {
-            $response = $response->withStatus(422, 'Unprocessable Content'); // nom de la RFC 9110, slim/psr7 garde l'ancien
+        // Noms de la RFC 9110 : slim/psr7 garde les anciens.
+        if ($status === 413) {
+            $response = $response->withStatus(413, 'Content Too Large');
+        } elseif ($status === 422) {
+            $response = $response->withStatus(422, 'Unprocessable Content');
         }
         if ($exception instanceof HttpMethodNotAllowedException) {
             $response = $response->withHeader('Allow', implode(', ', $exception->getAllowedMethods()));
