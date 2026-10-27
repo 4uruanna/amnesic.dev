@@ -50,6 +50,18 @@ final class MessageFiles
         return $content === false ? throw new RuntimeException("Fichier $file non lu.") : $content;
     }
 
+    /**
+     * La pièce jointe décodée, ouverte en lecture pour être servie en flux.
+     *
+     * @return resource
+     */
+    public function open(string $id, int $partId)
+    {
+        $file = "{$this->directory($id)}/parts/$partId";
+
+        return fopen($file, 'rb') ?: throw new RuntimeException("Fichier $file non ouvert.");
+    }
+
     /** Supprime le dossier du Message, s'il existe. */
     public function delete(string $id): void
     {

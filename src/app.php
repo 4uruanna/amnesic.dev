@@ -29,6 +29,7 @@ $app->group('/v1', function (RouteCollectorProxy $v1): void {
     // Un id hors de cet alphabet ne désigne aucune route : MySQL refuse de comparer un « é » à une colonne ascii.
     $v1->group('/messages/{id:[0-9a-f-]+}', function (RouteCollectorProxy $message): void {
         $message->get('', [MessageController::class, 'show']);
+        $message->get('/attachment/{partId:[1-9][0-9]*}', [MessageController::class, 'attachment']);
     })->add(new RequireRole('admin', 'user'));
 
     $v1->group('/accounts', function (RouteCollectorProxy $accounts): void {

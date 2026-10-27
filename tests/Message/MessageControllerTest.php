@@ -342,6 +342,56 @@ final class MessageControllerTest extends TestCase
         self::assertProblem($this->app->request('GET', "/v1/messages/$id", $this->bot), 403, 'Rôle non autorisé.');
     }
 
+    public function testAttachmentIsTheDepositedContentServedAsADownload(): void
+    {
+        $pdf = "%PDF-1.7\x00\xff\xfe" . random_bytes(1000);
+        $id = $this->deposit(['ci@x.tld'], ['attachments' => [
+            ['filename' => 'vide.txt', 'contentType' => 'text/plain; charset=utf-8', 'content' => ''],
+            ['filename' => 'facture "été" 2026.pdf', 'contentType' => 'application/pdf', 'content' => base64_encode($pdf)],
+        ]]);
+        $ci = $this->user('ci', 'ci@x.tld');
+
+        $response = $this->app->request('GET', "/v1/messages/$id/attachment/2", $ci);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame($pdf, (string) $response->getBody());
+        self::assertSame('application/pdf', $response->getHeaderLine('Content-Type'));
+        self::assertSame((string) strlen($pdf), $response->getHeaderLine('Content-Length'));
+        // Entre guillemets, l'ASCII imprimable seul ; filename* porte le nom exact (RFC 6266).
+        self::assertSame(
+            'attachment; filename="facture __t__ 2026.pdf"; filename*=UTF-8\'\'facture%20%22%C3%A9t%C3%A9%22%202026.pdf',
+            $response->getHeaderLine('Content-Disposition')
+        );
+        self::assertSame("default-src 'none'; sandbox", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+
+        $response = $this->app->request('GET', "/v1/messages/$id/attachment/1", $ci);
+        self::assertSame(['', 'text/plain; charset=utf-8', '0'], [(string) $response->getBody(), $response->getHeaderLine('Content-Type'), $response->getHeaderLine('Content-Length')]);
+    }
+
+    public function testAttachmentOfAnUnknownPartOrAnInvisibleMessageIs404(): void
+    {
+        $id = $this->deposit(['ops@x.tld'], ['attachments' => [['filename' => 'a.txt', 'contentType' => 'text/plain', 'content' => 'SGVsbG8=']]]);
+        $ops = $this->user('ops', 'ops@x.tld');
+
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id/attachment/2", $ops), 404, 'Pièce jointe introuvable.');
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id/attachment/1", $this->user('ci', 'ci@x.tld')), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('GET', '/v1/messages/' . Uuid::v7() . '/attachment/1', $ops), 404, 'Message introuvable.');
+        foreach (['0', '01', '1x', '-1'] as $partId) {
+            self::assertSame(404, $this->app->request('GET', "/v1/messages/$id/attachment/$partId", $ops)->getStatusCode(), $partId);
+        }
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id/attachment/1", $this->bot), 403, 'Rôle non autorisé.');
+    }
+
+    public function testAttachmentDoesNotMarkTheMessageRead(): void
+    {
+        $id = $this->deposit(['ci@x.tld'], ['attachments' => [['filename' => 'a.txt', 'contentType' => 'text/plain', 'content' => 'SGVsbG8=']]]);
+        $ci = $this->user('ci', 'ci@x.tld');
+
+        self::assertSame('Hello', (string) $this->app->request('GET', "/v1/messages/$id/attachment/1", $ci)->getBody());
+        self::assertSame([$id], $this->ids($ci, '?unread=1'));
+    }
+
     /** @return iterable<string, array{string, string}> */
     public static function invalidListQueries(): iterable
     {

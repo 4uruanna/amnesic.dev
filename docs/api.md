@@ -240,6 +240,8 @@ Content-Disposition: attachment; filename="facture.pdf"; filename*=UTF-8''factur
 Content-Security-Policy: default-src 'none'; sandbox
 ```
 
+`filename*` porte le nom exact, en UTF-8 encodé pour l'URL ([RFC 6266](https://www.rfc-editor.org/rfc/rfc6266)) ; `filename`, pour les clients qui l'ignorent, n'en garde que l'ASCII imprimable : tout autre caractère, `"` et `\` y deviennent `_` (`été.pdf` donne `filename="_t_.pdf"; filename*=UTF-8''%C3%A9t%C3%A9.pdf`).
+
 `404` si le Message ou la pièce n'existe pas ou n'est pas visible.
 
 ### `DELETE /v1/messages/{id}`

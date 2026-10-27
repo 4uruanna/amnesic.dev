@@ -91,6 +91,20 @@ final class MessageService
         return $detail;
     }
 
+    /**
+     * Une pièce jointe d'un Message que le Compte voit, et son contenu ouvert en lecture ; ne marque pas le Message lu.
+     *
+     * @return array{Attachment, resource}
+     */
+    public function attachment(Account $account, string $id, int $partId): array
+    {
+        $this->visible($account, $id);
+        $attachment = array_find($this->messages->attachmentsOf($id), fn (Attachment $a) => $a->partId === $partId)
+            ?? throw new NotFound('Pièce jointe introuvable.');
+
+        return [$attachment, $this->files->open($id, $partId)];
+    }
+
     /** Le Message, si le Compte le voit ; NotFound sinon, sans distinguer un Message inconnu d'un Message invisible. */
     private function visible(Account $account, string $id): Message
     {

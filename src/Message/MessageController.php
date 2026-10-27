@@ -13,6 +13,7 @@ use Apimail\Shared\Page;
 use JsonSerializable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Psr7\Stream;
 
 /** /v1/messages/** ; les rôles sont vérifiés par RequireRole dans app.php. */
 final class MessageController
@@ -41,6 +42,22 @@ final class MessageController
     public function show(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         return self::json($response, MessageDetail::fromModel(...$this->messages->show($request->getAttribute('account'), $args['id'])));
+    }
+
+    /** @param array{id: string, partId: string} $args */
+    public function attachment(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        [$attachment, $content] = $this->messages->attachment($request->getAttribute('account'), $args['id'], (int) $args['partId']);
+        // filename n'a pas de caractère de contrôle (AttachmentDeposit) ; entre guillemets, on n'en garde que l'ASCII imprimable.
+        $fallback = preg_replace('/[^\x20-\x7e]|["\\\\]/u', '_', $attachment->filename);
+
+        return $response
+            ->withBody(new Stream($content))
+            ->withHeader('Content-Type', $attachment->contentType)
+            ->withHeader('Content-Length', (string) $attachment->size)
+            ->withHeader('Content-Disposition', "attachment; filename=\"$fallback\"; filename*=UTF-8''" . rawurlencode($attachment->filename))
+            // Un HTML reçu ne s'exécute jamais sous le domaine de l'API (api.md § En-têtes de sécurité).
+            ->withHeader('Content-Security-Policy', "default-src 'none'; sandbox");
     }
 
     /** @param array<string, mixed>|JsonSerializable $body */
