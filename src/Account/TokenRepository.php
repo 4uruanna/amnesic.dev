@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apimail\Account;
 
 use Apimail\Account\Model\Account;
+use Apimail\Account\Model\Token;
 use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
@@ -25,5 +26,17 @@ final class TokenRepository
         $row = $select->fetch(PDO::FETCH_ASSOC);
 
         return $row === false ? null : new Account($row['id'], $row['name'], $row['role'], new DateTimeImmutable($row['created_at'], new DateTimeZone('UTC')));
+    }
+
+    /** @return list<Token> triés par date de création */
+    public function tokensOf(string $accountId): array
+    {
+        $select = $this->pdo->prepare('SELECT id, account_id, name, hash, created_at FROM tokens WHERE account_id = ? ORDER BY created_at, id');
+        $select->execute([$accountId]);
+
+        return array_map(
+            fn (array $row) => new Token($row['id'], $row['account_id'], $row['name'], $row['hash'], new DateTimeImmutable($row['created_at'], new DateTimeZone('UTC'))),
+            $select->fetchAll(PDO::FETCH_ASSOC)
+        );
     }
 }

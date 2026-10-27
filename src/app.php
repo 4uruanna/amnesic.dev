@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Apimail\Account\AccountController;
 use Apimail\Account\Authentication;
 use Apimail\Account\RequireRole;
 use Apimail\Setup\SetupController;
@@ -28,6 +29,13 @@ $app->group('/v1', function (RouteCollectorProxy $v1): void {
     $v1->get('/messages', function (ServerRequestInterface $request): never {
         throw new HttpNotImplementedException($request);
     })->add(new RequireRole('admin', 'user'));
+
+    $v1->group('/accounts', function (RouteCollectorProxy $accounts): void {
+        $accounts->post('', [AccountController::class, 'create']);
+        $accounts->get('', [AccountController::class, 'list']);
+        $accounts->get('/{id}', [AccountController::class, 'show']);
+        $accounts->delete('/{id}', [AccountController::class, 'delete']);
+    })->add(new RequireRole('admin'));
 })->add(Authentication::class);
 
 return $app;

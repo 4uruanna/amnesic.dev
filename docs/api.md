@@ -14,7 +14,7 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
 
 - **URL de base** : `https://www.api.amnesic.dev/v1`. HTTPS seulement : une requête en HTTP reçoit une redirection `301` (qu'un client ne doit pas suivre pour un `POST`, il appelle directement en HTTPS).
 - **Format** : JSON UTF-8. Un corps de requête porte `Content-Type: application/json`, sinon `415`. Un JSON mal formé reçoit `400`.
-- **Champs inconnus** : refusés (`422`) dans tout corps de requête, à tous les niveaux. Les paramètres de requête inconnus sont ignorés.
+- **Champs inconnus** : refusés (`422`) dans tout corps de requête, à tous les niveaux. Un corps qui n'est pas un objet JSON reçoit aussi `422`, avec une erreur de `field` vide. Les paramètres de requête inconnus sont ignorés.
 - **Dates** : ISO 8601 / RFC 3339. En entrée, tout décalage horaire est accepté ; en sortie, toujours UTC à la milliseconde : `2026-10-26T09:59:58.000Z`.
 - **Identifiants** : UUIDv7 en minuscules, `0192c8e4-7b1a-7c3e-9f00-5a4b3c2d1e0f`.
 - **Adresses mail** : validées, puis mises en minuscules. Toute comparaison se fait sur l'adresse exacte en minuscules.
