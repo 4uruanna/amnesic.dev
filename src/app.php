@@ -26,6 +26,10 @@ $app->get('/v1/setup', [SetupController::class, 'migrate']);
 $app->group('/v1', function (RouteCollectorProxy $v1): void {
     $v1->post('/messages', [MessageController::class, 'deposit'])->add(new RequireRole('bot'));
     $v1->get('/messages', [MessageController::class, 'list'])->add(new RequireRole('admin', 'user'));
+    // Un id hors de cet alphabet ne désigne aucune route : MySQL refuse de comparer un « é » à une colonne ascii.
+    $v1->group('/messages/{id:[0-9a-f-]+}', function (RouteCollectorProxy $message): void {
+        $message->get('', [MessageController::class, 'show']);
+    })->add(new RequireRole('admin', 'user'));
 
     $v1->group('/accounts', function (RouteCollectorProxy $accounts): void {
         $accounts->post('', [AccountController::class, 'create']);

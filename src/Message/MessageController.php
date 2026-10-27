@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apimail\Message;
 
 use Apimail\Message\Dto\MessageDeposit;
+use Apimail\Message\Dto\MessageDetail;
 use Apimail\Message\Dto\MessageFilter;
 use Apimail\Message\Dto\MessageSummary;
 use Apimail\Shared\JsonBody;
@@ -34,6 +35,12 @@ final class MessageController
         [$messages, $total] = $this->messages->list($request->getAttribute('account'), MessageFilter::fromArray($query), $offset, $limit);
 
         return self::json($response, new Page(array_map(fn (array $message) => MessageSummary::fromModel(...$message), $messages), $total, $offset, $limit));
+    }
+
+    /** @param array{id: string} $args */
+    public function show(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        return self::json($response, MessageDetail::fromModel(...$this->messages->show($request->getAttribute('account'), $args['id'])));
     }
 
     /** @param array<string, mixed>|JsonSerializable $body */

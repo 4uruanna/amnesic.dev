@@ -12,6 +12,7 @@ use Apimail\Message\Dto\MessageFilter;
 use Apimail\Message\Model\Attachment;
 use Apimail\Message\Model\Message;
 use Apimail\Message\Model\Recipient;
+use Apimail\Shared\NotFound;
 use Apimail\Shared\Uuid;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -24,6 +25,7 @@ final class MessageService
     public function __construct(
         private readonly PDO $pdo,
         private readonly MessageRepository $messages,
+        private readonly MessageReadRepository $reads,
         private readonly MessageFiles $files,
     ) {
     }
@@ -73,6 +75,26 @@ final class MessageService
         $recipients = $this->messages->recipientsOf(array_map(fn (array $row) => $row[0]->id, $rows));
 
         return [array_map(fn (array $row) => [$row[0], $recipients[$row[0]->id], $row[1], $row[2]], $rows), $total];
+    }
+
+    /**
+     * Le détail d'un Message que le Compte voit, qui le marque lu pour ce Compte seul.
+     *
+     * @return array{Message, list<Recipient>, list<Attachment>, ?string, ?string} le Message, ses Destinataires, ses pièces jointes, son text et son html
+     */
+    public function show(Account $account, string $id): array
+    {
+        $message = $this->visible($account, $id);
+        $detail = [$message, $this->messages->recipientsOf([$id])[$id], $this->messages->attachmentsOf($id), $this->files->read($id, 'text'), $this->files->read($id, 'html')];
+        $this->reads->insert($account->id, $id);
+
+        return $detail;
+    }
+
+    /** Le Message, si le Compte le voit ; NotFound sinon, sans distinguer un Message inconnu d'un Message invisible. */
+    private function visible(Account $account, string $id): Message
+    {
+        return $this->messages->find($id, self::boundTo($account)) ?? throw new NotFound('Message introuvable.');
     }
 
     /** Le Compte dont les Bindings bornent ce que voit $account : aucun pour un admin, qui voit tout (api.md § Authentification et permissions). */

@@ -34,6 +34,22 @@ final class MessageFiles
         }
     }
 
+    /**
+     * La partie text ou html du Message, ou null s'il n'en a pas.
+     *
+     * @param 'text'|'html' $part
+     */
+    public function read(string $id, string $part): ?string
+    {
+        $file = "{$this->directory($id)}/$part";
+        if (!is_file($file)) {
+            return null;
+        }
+        $content = file_get_contents($file);
+
+        return $content === false ? throw new RuntimeException("Fichier $file non lu.") : $content;
+    }
+
     /** Supprime le dossier du Message, s'il existe. */
     public function delete(string $id): void
     {

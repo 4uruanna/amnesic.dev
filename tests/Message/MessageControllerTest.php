@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apimail\Tests\Message;
 
+use Apimail\Shared\Uuid;
 use Apimail\Tests\TestApp;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -254,6 +255,91 @@ final class MessageControllerTest extends TestCase
 
         $page = $this->page($admin, '?offset=10');
         self::assertSame([[], 5], [$page['items'], $page['total']]);
+    }
+
+    public function testDetailGivesTheContentAndTheAttachmentInfos(): void
+    {
+        $id = $this->deposit([], [
+            'from' => ['address' => 'NoReply@Service.tld', 'name' => 'Service'],
+            'to' => [['address' => 'ci@amnesic.dev', 'name' => 'CI']],
+            'subject' => 'Votre code',
+            'sentAt' => '2026-10-26T11:59:58.5+02:00',
+            'text' => "Code : 123456\r\n",
+            'html' => '<p>Code : <b>123456</b></p>',
+            'attachments' => [
+                ['filename' => 'facture é.pdf', 'contentType' => 'application/pdf', 'content' => base64_encode('%PDF-1.7')],
+                ['filename' => 'vide.txt', 'contentType' => 'text/plain; charset=utf-8', 'content' => ''],
+            ],
+        ]);
+        $this->receivedAt($id, '2026-10-27 08:00:00.250');
+
+        $response = $this->app->request('GET', "/v1/messages/$id", $this->user('ci', 'ci@amnesic.dev'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        self::assertSame([
+            'id' => $id,
+            'from' => ['address' => 'noreply@service.tld', 'name' => 'Service'],
+            'to' => [['address' => 'ci@amnesic.dev', 'name' => 'CI']],
+            'subject' => 'Votre code',
+            'sentAt' => '2026-10-26T09:59:58.500Z',
+            'receivedAt' => '2026-10-27T08:00:00.250Z',
+            'hasAttachments' => true,
+            'text' => "Code : 123456\r\n",
+            'html' => '<p>Code : <b>123456</b></p>',
+            'attachments' => [
+                ['partId' => 1, 'filename' => 'facture é.pdf', 'contentType' => 'application/pdf', 'size' => 8],
+                ['partId' => 2, 'filename' => 'vide.txt', 'contentType' => 'text/plain; charset=utf-8', 'size' => 0],
+            ],
+        ], TestApp::json($response));
+    }
+
+    public function testDetailGivesNullForAPartThatWasNotDeposited(): void
+    {
+        $id = $this->deposit(['ci@x.tld'], ['text' => '']);
+
+        $detail = TestApp::json($this->app->request('GET', "/v1/messages/$id", $this->app->token('admin')));
+
+        self::assertSame(['', null, [], false], [$detail['text'], $detail['html'], $detail['attachments'], $detail['hasAttachments']]);
+    }
+
+    public function testDetailMarksTheMessageReadForTheCallerOnly(): void
+    {
+        $id = $this->deposit(['ci@x.tld']);
+        $ci = $this->user('ci', 'ci@x.tld');
+        $ops = $this->user('ops', 'ci@x.tld');
+        $admin = $this->app->token('admin');
+
+        foreach ([$ci, $ci, $admin] as $token) {
+            self::assertSame(200, $this->app->request('GET', "/v1/messages/$id", $token)->getStatusCode());
+        }
+
+        self::assertSame([], $this->ids($ci, '?unread=1'));
+        self::assertSame([$id], $this->ids($ci, '?unread=0'));
+        self::assertSame([$id], $this->ids($ops, '?unread=1'));
+        self::assertSame([], $this->ids($admin, '?unread=1'));
+        // Deux lectures de ci, une seule ligne.
+        self::assertSame(['admin', 'ci'], $this->rows('SELECT a.name FROM message_reads mr JOIN accounts a ON a.id = mr.account_id ORDER BY a.name', PDO::FETCH_COLUMN));
+    }
+
+    public function testDetailOfAnUnknownOrInvisibleMessageIs404WithoutMarking(): void
+    {
+        $id = $this->deposit(['ops@x.tld']);
+        $ci = $this->user('ci', 'ci@x.tld');
+
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id", $ci), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('GET', '/v1/messages/' . Uuid::v7(), $ci), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('GET', '/v1/messages/' . Uuid::v7(), $this->app->token('admin')), 404, 'Message introuvable.');
+        // Hors de l'alphabet des UUID, aucune route : MySQL ne compare pas un « é » à une colonne ascii.
+        self::assertSame(404, $this->app->request('GET', '/v1/messages/%C3%A9', $ci)->getStatusCode());
+        self::assertSame([], $this->rows('SELECT message_id FROM message_reads'));
+    }
+
+    public function testOnlyAdminsAndUsersReadTheDetail(): void
+    {
+        $id = $this->deposit(['ci@x.tld']);
+
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id", $this->bot), 403, 'Rôle non autorisé.');
     }
 
     /** @return iterable<string, array{string, string}> */

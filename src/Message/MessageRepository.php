@@ -95,6 +95,16 @@ final class MessageRepository
         ];
     }
 
+    /** Le Message, s'il existe et, avec $boundTo, si l'un de ses Destinataires est lié à ce Compte. */
+    public function find(string $id, ?string $boundTo): ?Message
+    {
+        $select = $this->pdo->prepare('SELECT m.id, m.from_address, m.from_name, m.subject, m.sent_at, m.received_at FROM messages m WHERE m.id = ?' . ($boundTo === null ? '' : ' AND ' . self::BOUND));
+        $select->execute($boundTo === null ? [$id] : [$id, $boundTo]);
+        $row = $select->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : self::message($row);
+    }
+
     /**
      * @param list<string> $ids
      * @return array<string, list<Recipient>> les Destinataires de chaque Message, triés par adresse
@@ -112,6 +122,18 @@ final class MessageRepository
         }
 
         return $recipients;
+    }
+
+    /** @return list<Attachment> les pièces jointes du Message, par partId */
+    public function attachmentsOf(string $id): array
+    {
+        $select = $this->pdo->prepare('SELECT message_id, part_id, filename, content_type, size FROM attachments WHERE message_id = ? ORDER BY part_id');
+        $select->execute([$id]);
+
+        return array_map(
+            fn (array $row) => new Attachment($row['message_id'], $row['part_id'], $row['filename'], $row['content_type'], $row['size']),
+            $select->fetchAll(PDO::FETCH_ASSOC),
+        );
     }
 
     /** @param array<string, ?string> $row */
