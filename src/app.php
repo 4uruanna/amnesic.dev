@@ -30,6 +30,7 @@ $app->group('/v1', function (RouteCollectorProxy $v1): void {
     $v1->group('/messages/{id:[0-9a-f-]+}', function (RouteCollectorProxy $message): void {
         $message->get('', [MessageController::class, 'show']);
         $message->get('/attachment/{partId:[1-9][0-9]*}', [MessageController::class, 'attachment']);
+        $message->delete('', [MessageController::class, 'delete']);
     })->add(new RequireRole('admin', 'user'));
 
     $v1->group('/accounts', function (RouteCollectorProxy $accounts): void {

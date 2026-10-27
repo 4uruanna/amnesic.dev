@@ -392,6 +392,49 @@ final class MessageControllerTest extends TestCase
         self::assertSame([$id], $this->ids($ci, '?unread=1'));
     }
 
+    public function testUserDeletesASharedMessageForEveryAccount(): void
+    {
+        $id = $this->deposit(['ci@x.tld', 'ops@x.tld'], ['text' => 'Code', 'attachments' => [['filename' => 'a.txt', 'contentType' => 'text/plain', 'content' => 'SGVsbG8=']]]);
+        $kept = $this->deposit(['ci@x.tld'], ['text' => 'Gardé']);
+        $ci = $this->user('ci', 'ci@x.tld');
+        $ops = $this->user('ops', 'ops@x.tld');
+        $this->app->request('GET', "/v1/messages/$id", $ops);
+
+        $response = $this->app->request('DELETE', "/v1/messages/$id", $ci);
+
+        self::assertSame(204, $response->getStatusCode());
+        self::assertSame('', (string) $response->getBody());
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id", $ops), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('DELETE', "/v1/messages/$id", $ops), 404, 'Message introuvable.');
+        self::assertSame([], $this->ids($ops));
+        self::assertSame([$kept], $this->ids($this->app->token('admin')));
+        self::assertDirectoryDoesNotExist("{$this->app->storage}/messages/$id");
+        self::assertFileExists("{$this->app->storage}/messages/$kept/text");
+        // Les cascades emportent ses Destinataires, sa pièce jointe et la lecture de ops.
+        foreach (['recipients', 'attachments', 'message_reads'] as $table) {
+            self::assertNotContains($id, $this->rows("SELECT message_id FROM $table", PDO::FETCH_COLUMN), $table);
+        }
+    }
+
+    public function testAdminDeletesAMessageNoAccountIsBoundTo(): void
+    {
+        $id = $this->deposit(['personne@x.tld']);
+
+        self::assertSame(204, $this->app->request('DELETE', "/v1/messages/$id", $this->app->token('admin'))->getStatusCode());
+        self::assertSame([], $this->rows('SELECT id FROM messages'));
+    }
+
+    public function testDeletingAnInvisibleOrUnknownMessageIs404AndABotIs403(): void
+    {
+        $id = $this->deposit(['ops@x.tld'], ['text' => 'Code']);
+
+        self::assertProblem($this->app->request('DELETE', "/v1/messages/$id", $this->user('ci', 'ci@x.tld')), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('DELETE', '/v1/messages/' . Uuid::v7(), $this->app->token('admin')), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('DELETE', "/v1/messages/$id", $this->bot), 403, 'Rôle non autorisé.');
+        self::assertSame([$id], $this->rows('SELECT id FROM messages', PDO::FETCH_COLUMN));
+        self::assertFileExists("{$this->app->storage}/messages/$id/text");
+    }
+
     /** @return iterable<string, array{string, string}> */
     public static function invalidListQueries(): iterable
     {

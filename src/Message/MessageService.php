@@ -19,7 +19,7 @@ use DateTimeZone;
 use PDO;
 use Throwable;
 
-/** Dépôt des Messages, et leur lecture selon les Bindings du Compte. */
+/** Dépôt des Messages, leur lecture selon les Bindings du Compte, et leur suppression. */
 final class MessageService
 {
     public function __construct(
@@ -103,6 +103,23 @@ final class MessageService
             ?? throw new NotFound('Pièce jointe introuvable.');
 
         return [$attachment, $this->files->open($id, $partId)];
+    }
+
+    /** Supprime définitivement un Message que le Compte voit, pour tous les Comptes (ADR 0008). */
+    public function delete(Account $account, string $id): void
+    {
+        $this->visible($account, $id);
+        $this->erase($id);
+    }
+
+    /**
+     * La ligne messages, puis le dossier : une interruption laisse au pire un dossier sans ligne (data-model.md § Fichiers).
+     * Seul chemin de suppression, que la purge réutilise (ADR 0009).
+     */
+    private function erase(string $id): void
+    {
+        $this->messages->delete($id);
+        $this->files->delete($id);
     }
 
     /** Le Message, si le Compte le voit ; NotFound sinon, sans distinguer un Message inconnu d'un Message invisible. */

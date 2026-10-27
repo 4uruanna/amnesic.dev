@@ -124,6 +124,12 @@ final class MessageRepository
         return $recipients;
     }
 
+    /** Les cascades emportent ses Destinataires, ses pièces jointes et ses lectures. */
+    public function delete(string $id): void
+    {
+        $this->pdo->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]);
+    }
+
     /** @return list<Attachment> les pièces jointes du Message, par partId */
     public function attachmentsOf(string $id): array
     {

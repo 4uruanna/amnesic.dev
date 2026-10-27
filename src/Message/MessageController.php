@@ -60,6 +60,14 @@ final class MessageController
             ->withHeader('Content-Security-Policy', "default-src 'none'; sandbox");
     }
 
+    /** @param array{id: string} $args */
+    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $this->messages->delete($request->getAttribute('account'), $args['id']);
+
+        return $response->withStatus(204);
+    }
+
     /** @param array<string, mixed>|JsonSerializable $body */
     private static function json(ResponseInterface $response, array|JsonSerializable $body): ResponseInterface
     {
