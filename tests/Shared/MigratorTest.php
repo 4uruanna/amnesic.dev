@@ -47,6 +47,18 @@ final class MigratorTest extends TestCase
         self::assertSame(['001_create.sql'], $this->versions());
     }
 
+    public function testProjectMigrationsApplyOnEmptyDatabase(): void
+    {
+        $pdo = TestDatabase::reset();
+
+        self::assertSame(['001_comptes.sql'], $pdo->query('SELECT version FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN));
+        self::assertSame(
+            ['accounts', 'bindings', 'schema_migrations', 'tokens'],
+            $pdo->query('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY 1')
+                ->fetchAll(PDO::FETCH_COLUMN)
+        );
+    }
+
     /** @return list<string> */
     private function versions(): array
     {
