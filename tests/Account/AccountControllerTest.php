@@ -201,6 +201,23 @@ final class AccountControllerTest extends TestCase
         self::assertProblem($this->app->request('POST', "/v1/accounts/$unknown/tokens", $this->admin, ['name' => 'ci']), 404, 'Compte introuvable.');
     }
 
+    public function testNonUuidIdsMatchNoRoute(): void
+    {
+        $id = $this->create('ci', 'user');
+
+        // Hors de l'alphabet des UUID, aucune route : MySQL ne compare pas un « é » à une colonne ascii.
+        foreach ([
+            ['GET', '/v1/accounts/%C3%A9', null],
+            ['DELETE', '/v1/accounts/%C3%A9', null],
+            ['POST', '/v1/accounts/%C3%A9/bindings', ['address' => 'ci@x.tld']],
+            ['DELETE', '/v1/accounts/%C3%A9/bindings/ci@x.tld', null],
+            ['POST', '/v1/accounts/%C3%A9/tokens', ['name' => 'ci']],
+            ['DELETE', "/v1/accounts/$id/tokens/%C3%A9", null],
+        ] as [$method, $path, $body]) {
+            self::assertSame(404, $this->app->request($method, $path, $this->admin, $body)->getStatusCode(), "$method $path");
+        }
+    }
+
     public function testIssuedTokenAuthenticatesUntilRevoked(): void
     {
         $id = $this->create('ci', 'user');

@@ -36,12 +36,15 @@ $app->group('/v1', function (RouteCollectorProxy $v1): void {
     $v1->group('/accounts', function (RouteCollectorProxy $accounts): void {
         $accounts->post('', [AccountController::class, 'create']);
         $accounts->get('', [AccountController::class, 'list']);
-        $accounts->get('/{id}', [AccountController::class, 'show']);
-        $accounts->delete('/{id}', [AccountController::class, 'delete']);
-        $accounts->post('/{id}/bindings', [AccountController::class, 'bind']);
-        $accounts->delete('/{id}/bindings/{address}', [AccountController::class, 'unbind']);
-        $accounts->post('/{id}/tokens', [AccountController::class, 'issueToken']);
-        $accounts->delete('/{id}/tokens/{tokenId}', [AccountController::class, 'revokeToken']);
+        // Même alphabet que /messages/{id}, pour la même raison.
+        $accounts->group('/{id:[0-9a-f-]+}', function (RouteCollectorProxy $account): void {
+            $account->get('', [AccountController::class, 'show']);
+            $account->delete('', [AccountController::class, 'delete']);
+            $account->post('/bindings', [AccountController::class, 'bind']);
+            $account->delete('/bindings/{address}', [AccountController::class, 'unbind']);
+            $account->post('/tokens', [AccountController::class, 'issueToken']);
+            $account->delete('/tokens/{tokenId:[0-9a-f-]+}', [AccountController::class, 'revokeToken']);
+        });
     })->add(new RequireRole('admin'));
 })->add(Authentication::class);
 
