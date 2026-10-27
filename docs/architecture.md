@@ -94,5 +94,5 @@ tests/                         même arborescence que src/
 ## Tests
 
 - **Unitaires** : chaque règle des DTO de requête, `Uuid`.
-- **Intégration** : par `$app->handle()` contre la base `apimail_test` (`tests/TestApp.php` y branche l'application), qui couvre ensemble Controller, Service et Repository. Pas de mocks.
+- **Intégration** : par `$app->handle()` contre la base `apimail_test` (`tests/TestApp.php` y branche l'application), qui couvre ensemble Controller, Service et Repository. La purge, qui n'a pas de route, s'appelle sur le `MessageService` du conteneur par `TestApp::get()`. Pas de mocks.
 - `tests/` reprend l'arborescence de `src/` (`tests/Account/…`, `tests/Message/…`, `tests/Shared/…`).

@@ -19,7 +19,7 @@ use DateTimeZone;
 use PDO;
 use Throwable;
 
-/** Dépôt des Messages, leur lecture selon les Bindings du Compte, et leur suppression. */
+/** Dépôt des Messages, leur lecture selon les Bindings du Compte, leur suppression et leur purge. */
 final class MessageService
 {
     public function __construct(
@@ -110,6 +110,20 @@ final class MessageService
     {
         $this->visible($account, $id);
         $this->erase($id);
+    }
+
+    /** Supprime, lot après lot jusqu'à épuisement, les Messages reçus il y a plus de 30 jours (ADR 0009) ; renvoie leur nombre. */
+    public function purge(): int
+    {
+        $purged = 0;
+        while (($ids = $this->messages->expired()) !== []) {
+            foreach ($ids as $id) {
+                $this->erase($id);
+            }
+            $purged += count($ids);
+        }
+
+        return $purged;
     }
 
     /**

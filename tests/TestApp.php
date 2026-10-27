@@ -28,6 +28,18 @@ final class TestApp
         $this->app->getContainer()->set(MessageFiles::class, new MessageFiles($this->storage));
     }
 
+    /**
+     * Un service du conteneur de l'application, pour ce qui n'a pas de route (la purge).
+     *
+     * @template T of object
+     * @param class-string<T> $class
+     * @return T
+     */
+    public function get(string $class): object
+    {
+        return $this->app->getContainer()->get($class);
+    }
+
     /** Crée en base un Compte de ce rôle avec un Jeton, et renvoie le secret du Jeton. */
     public function token(string $role, ?string $name = null): string
     {

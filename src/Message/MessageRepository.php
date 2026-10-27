@@ -124,6 +124,12 @@ final class MessageRepository
         return $recipients;
     }
 
+    /** @return list<string> au plus 500 Messages reçus il y a plus de 30 jours (data-model.md § Requêtes clés) */
+    public function expired(): array
+    {
+        return $this->pdo->query('SELECT id FROM messages WHERE received_at < UTC_TIMESTAMP(3) - INTERVAL 30 DAY LIMIT 500')->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     /** Les cascades emportent ses Destinataires, ses pièces jointes et ses lectures. */
     public function delete(string $id): void
     {
