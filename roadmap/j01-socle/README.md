@@ -18,4 +18,4 @@ curl -i http://api.amnesic.dev/v1/messages
 - [x] [J01-2 Base et migrations](2-base-et-migrations.md)
 - [x] [J01-3 Garde Bearer](3-garde-bearer.md)
 - [x] [J01-6 Intégration continue et branche `ovh`](6-integration-continue-et-branche-ovh.md)
-- [ ] [J01-4 Déploiement OVH](4-deploiement-ovh.md)
+- [x] [J01-4 Déploiement OVH](4-deploiement-ovh.md)
