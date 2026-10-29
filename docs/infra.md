@@ -86,7 +86,7 @@ const API_MAIL_DB_USER = '';
 const API_MAIL_DB_PASSWORD = '';
 ```
 
-`src/container.php` le charge par `require_once` et en tire le `PDO`. Le chemin de `storage/` n'est pas configurable : c'est toujours le dossier `storage/` voisin de `config.php`.
+`src/container.php` le charge par `require_once` et en tire le `PDO`. Il jette ce que le fichier écrit : un `config.php` qui commence par `<php` au lieu de `<?php` n'est que du texte, que PHP imprimerait sinon, mot de passe compris, en tête de chaque réponse ; ses constantes manquent alors, et l'API répond `500`. Le chemin de `storage/` n'est pas configurable : c'est toujours le dossier `storage/` voisin de `config.php`.
 
 ## Développement local
 
