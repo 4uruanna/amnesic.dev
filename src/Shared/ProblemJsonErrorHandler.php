@@ -22,28 +22,43 @@ final class ProblemJsonErrorHandler implements ErrorHandlerInterface
         bool $logErrors,
         bool $logErrorDetails
     ): ResponseInterface {
-        if ($exception instanceof HttpException) {
-            $status = $exception->getCode();
-            $detail = $exception->getMessage();
-        } else {
+        $status = match (true) {
+            $exception instanceof HttpException => $exception->getCode(),
+            $exception instanceof ValidationFailed => 422,
+            $exception instanceof NotFound => 404,
+            $exception instanceof Conflict => 409,
+            default => 500,
+        };
+        if ($status === 500) {
             error_log((string) $exception);
-            $status = 500;
             $detail = 'Erreur interne.';
+        } else {
+            $detail = $exception->getMessage();
         }
 
         $response = new Response($status);
+        // Noms de la RFC 9110 : slim/psr7 garde les anciens.
+        if ($status === 413) {
+            $response = $response->withStatus(413, 'Content Too Large');
+        } elseif ($status === 422) {
+            $response = $response->withStatus(422, 'Unprocessable Content');
+        }
         if ($exception instanceof HttpMethodNotAllowedException) {
             $response = $response->withHeader('Allow', implode(', ', $exception->getAllowedMethods()));
         }
         if ($status === 401) {
             $response = $response->withHeader('WWW-Authenticate', 'Bearer');
         }
-        $response->getBody()->write(json_encode([
+        $problem = [
             'type' => 'about:blank',
             'title' => $response->getReasonPhrase(),
             'status' => $status,
             'detail' => $detail,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        ];
+        if ($exception instanceof ValidationFailed) {
+            $problem['errors'] = $exception->errors;
+        }
+        $response->getBody()->write(json_encode($problem, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         return $response->withHeader('Content-Type', 'application/problem+json');
     }
