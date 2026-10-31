@@ -46,6 +46,7 @@ bin/                           purge.php
 .github/workflows/ci.yml       tests, puis publication de la branche ovh (infra.md § Déploiement)
 .htaccess, .ovhconfig          configuration OVH du dossier du site
 compose.yaml                   MySQL et PHP des tests locaux (infra.md § Développement local)
+robot/                         le Relais : Mailpit et le Robot, hors de la branche ovh (relais.md)
 tests/                         même arborescence que src/
 ```
 

@@ -1,6 +1,6 @@
 # apimail
 
-API PHP qui reçoit des mails déposés par un relais externe et les expose en lecture aux comptes autorisés par les adresses du champ `To`.
+API PHP qui reçoit des mails déposés par un relais et les expose en lecture aux comptes autorisés par les adresses du champ `To`.
 
 ## Language
 
@@ -29,7 +29,11 @@ _Avoid_ : clé d'API, JWT
 Un **Message** est lu par un **Compte** dès que ce **Compte** a récupéré son détail (`GET /v1/messages/{id}`). L'état est propre à chaque **Compte** et ne revient jamais à non lu.
 
 **Relais** :
-Le service externe qui reçoit les mails du MX, les découpe en JSON et les dépose dans l'API avec le **Jeton** d'un **Bot**. C'est un projet séparé, hors de ce dépôt.
+Le service qui reçoit les mails du MX et les dépose dans l'API avec le **Jeton** d'un **Bot** : Mailpit, qui les reçoit en SMTP et les découpe, et le **Robot**, qui les dépose. Il tourne sur la machine qui reçoit le MX ([`docs/relais.md`](docs/relais.md)).
+
+**Robot** :
+Le programme PHP de `robot/` qui relève Mailpit, convertit chaque mail en JSON et le dépose par `POST /v1/messages`. Il s'authentifie comme **Bot**.
+_Avoid_ : bot (c'est son **Compte**, pas le programme)
 
 ## Relationships
 
@@ -37,10 +41,11 @@ Le service externe qui reçoit les mails du MX, les découpe en JSON et les dép
 - Un **Compte** `user` voit et supprime un **Message** si l'un de ses **Bindings** porte sur l'un de ses **Destinataires**.
 - Un **Compte** `admin` voit et supprime tous les **Messages**, et gère les **Comptes**, **Bindings** et **Jetons**.
 - Un **Compte** a zéro ou plusieurs **Jetons** et zéro ou plusieurs **Bindings**.
-- Le **Relais** dépose chaque **Message** par `POST /v1/messages`, en tant que **Bot**.
+- Le **Robot** du **Relais** dépose chaque **Message** par `POST /v1/messages`, en tant que **Bot**, puis le supprime de Mailpit.
 - Un **Message** est purgé 30 jours après sa réception.
 
 ## Flagged ambiguities
 
 - « bot » : résolu, c'est un **Compte** qui dépose les **Messages** (il remplace le rôle `relay` envisagé le 2026-10-19).
 - « relay » désignait à la fois le service externe et son rôle dans l'API : le service est le **Relais**, le rôle est `bot`.
+- « robot » et « bot » : le **Robot** est le programme de `robot/`, le **Bot** est le **Compte** avec lequel il dépose.
