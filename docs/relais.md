@@ -12,7 +12,9 @@ Internet ──SMTP 25──▶ mailpit ◀──HTTP 8025── robot ──HTT
 robot/
   compose.yaml       conteneurs mailpit et robot
   Dockerfile         image du robot : php:8.4-cli, dépendances sans dev
+  .dockerignore      n'envoie à l'image que composer.*, bin/ et src/ : ni .env, ni auth.txt, ni data/
   composer.json      projet Composer à part : autoload Robot\ → src/, PHPUnit en dev
+  phpunit.xml
   .env.template      variables de .env, sans valeur secrète
   bin/relais.php     configuration, puis un cycle toutes les POLL_SECONDS
   src/
@@ -21,7 +23,7 @@ robot/
     Conversion.php   message Mailpit → MessageDeposit
     Relais.php       un cycle : relever, déposer, puis supprimer ou étiqueter
   tests/
-  .env, auth.txt, data/, vendor/   propres à chaque installation, ignorés par git
+  .env, auth.txt, data/, vendor/, compose.override.yaml   propres à chaque installation, ignorés par git
 ```
 
 Le robot ne dépend que de PHP et de `ext-curl`, déjà dans l'image `php:8.4-cli` : pas de bibliothèque HTTP. Il ne partage aucun code avec l'API ; leur seul contrat est [`api.md` § `POST /v1/messages`](api.md#post-v1messages).
@@ -32,20 +34,20 @@ Le robot ne dépend que de PHP et de `ext-curl`, déjà dans l'image `php:8.4-cl
 
 | | `mailpit` | `robot` |
 |---|---|---|
-| Image | `axllent/mailpit`, version épinglée (1.30 ou plus, pour `--max-message-size`) | construite depuis `Dockerfile` |
+| Image | `axllent/mailpit:v1.32.0`, version épinglée (1.30 ou plus, pour `--max-message-size`) | construite depuis `Dockerfile` |
 | Ports | `25:1025` (SMTP, redirigé par la box) ; `127.0.0.1:8025:8025` (interface et API, la machine seule) | aucun |
-| Données | `./data:/data` (`mailpit.db`) | aucune : tout l'état est dans Mailpit |
+| Données | `./data:/data` (`mailpit.db`) et `./auth.txt:/auth.txt:ro`, que l'utilisateur `10001` doit pouvoir écrire et lire | aucune : tout l'état est dans Mailpit |
 | Durcissement | utilisateur `10001:10001`, `read_only`, `tmpfs: /tmp`, `cap_drop: ALL`, `no-new-privileges` | les mêmes |
 | Journaux | pilote `local` | pilote `local` |
-| Redémarrage | `unless-stopped` | `unless-stopped`, `init: true` |
+| Redémarrage | `unless-stopped` | `unless-stopped`, `init: true` ; démarre quand `mailpit` est sain (`/mailpit readyz`, le contrôle de l'image) |
 
-Options de Mailpit : `--database=/data/mailpit.db`, `--max=2000`, `--max-age=7d`, `--max-message-size=25`, `--smtp-max-recipients=5`, `--smtp-allowed-recipients=${MAILPIT_ALLOWED_RECIPIENTS}`, `--ui-auth-file=/auth.txt`. N'ajouter aucune option `--smtp-relay-*` : Mailpit deviendrait un relais ouvert.
+Options de Mailpit : `--database=/data/mailpit.db`, `--max=2000`, `--max-age=7d`, `--max-message-size=25`, `--smtp-max-recipients=5`, `--smtp-allowed-recipients=${MAILPIT_ALLOWED_RECIPIENTS}`, `--ui-auth-file=/auth.txt`, `--tags-disable=plus-addresses,x-tags`. La dernière réserve les étiquettes au robot : sans elle, un mail envoyé à `ci+rejet@…` ou avec un en-tête `X-Tags: rejet` serait étiqueté `rejet` dès son arrivée, et jamais déposé. N'ajouter aucune option `--smtp-relay-*` : Mailpit deviendrait un relais ouvert.
 
 Le robot joint Mailpit par le réseau de Compose, à `http://mailpit:8025`, avec l'authentification de l'interface (`auth.txt`).
 
 ## Configuration
 
-`robot/.env`, copié de `.env.template` et rempli sur la machine, que Compose passe aux deux conteneurs :
+`robot/.env`, copié de `.env.template` et rempli sur la machine. Compose le passe en entier au robot (`env_file`) ; `mailpit` n'en reçoit que `MAILPIT_ALLOWED_RECIPIENTS`, dans sa commande, et Compose refuse de démarrer si elle est vide : Mailpit accepterait alors tous les Destinataires. Une valeur qui contient `$`, `#` ou une espace s'écrit entre apostrophes.
 
 | Variable | Valeur |
 |---|---|
@@ -114,7 +116,7 @@ Une fois :
 1. **Clé** : sur la machine, une clé SSH dédiée ; sa partie publique dans GitHub → dépôt `amnesic.dev` → Settings → Deploy keys, sans droit d'écriture.
 2. **Clone** : `git clone git@github.com:4uruanna/amnesic.dev.git apimail`.
 3. **Bot** : avec un jeton admin, `POST /v1/accounts` crée `relais-mx` (`bot`), `POST /v1/accounts/{id}/tokens` lui donne le jeton de `APIMAIL_TOKEN`.
-4. **Configuration** : dans `apimail/robot/`, `.env` copié de `.env.template` et rempli ; `auth.txt` et `data/` repris du Mailpit en place, après l'avoir arrêté.
+4. **Configuration** : dans `apimail/robot/`, `.env` copié de `.env.template` et rempli ; `auth.txt` et `data/` repris du Mailpit en place, après l'avoir arrêté, puis donnés à l'utilisateur des conteneurs : `sudo chown -R 10001:10001 data auth.txt`.
 5. **Démarrage** : `docker compose up -d --build` dans `robot/`. Au premier cycle, le robot dépose tous les mails que Mailpit garde encore : les supprimer avant dans l'interface si on n'en veut pas.
 
 Mise à jour : `git pull && docker compose up -d --build` dans `robot/`. Rien n'est automatique : un push sur `main` ne touche pas la machine.
@@ -123,4 +125,21 @@ Mise à jour : `git pull && docker compose up -d --build` dans `robot/`. Rien n'
 
 - **Unitaires** : `Conversion`, sur des messages Mailpit en JSON capturés sur un vrai Mailpit.
 - **Intégration** : un cycle contre un vrai Mailpit en conteneur et la vraie API (`php -S` sur `public/`, base `apimail_test`), sans mocks. Les mails de test entrent par l'API d'envoi de Mailpit, `POST /api/v1/send`.
-- **CI** : un job `robot` dans `.github/workflows/ci.yml`, avec les services MySQL et Mailpit.
+- **CI** : un job `robot` dans `.github/workflows/ci.yml`, avec les services MySQL et Mailpit. Le job `publish` attend aussi celui-ci, et échoue si l'arbre publié sur `ovh` contient `robot/`.
+
+Comme pour l'API, Composer et PHPUnit tournent dans Docker, en PHP 8.4 ([infra.md § Développement local](infra.md#développement-local)) :
+
+```sh
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD/robot":/app -w /app composer:2 install
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD/robot":/app -w /app php:8.4-cli vendor/bin/phpunit
+```
+
+Pour faire tourner le Relais sur le poste, dans `robot/` : `.env` rempli ; `auth.txt` écrit par `php -r 'echo "mailpit:", password_hash($argv[1], PASSWORD_BCRYPT), "\n";' "<mot de passe>" > auth.txt`, le même mot de passe dans `MAILPIT_PASS` ; `data/` donné à l'utilisateur `10001` sans `sudo` par `docker run --rm -v "$PWD/data:/data" busybox chown 10001:10001 /data` ; puis `docker compose up -d --build`. Pour ne pas ouvrir le port 25 du poste, un `compose.override.yaml`, ignoré par git, remplace les ports de `mailpit` :
+
+```yaml
+services:
+  mailpit:
+    ports: !override
+      - 127.0.0.1:2525:1025
+      - 127.0.0.1:8025:8025
+```

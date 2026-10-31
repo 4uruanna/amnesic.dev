@@ -45,8 +45,23 @@ jobs:
       - run: composer install --no-interaction --no-progress
       - run: vendor/bin/phpunit
 
+  # Le Robot du Relais, projet Composer à part dans robot/ (docs/relais.md § Développement local et tests).
+  robot:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: robot
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit
+
   publish:
-    needs: test
+    needs: [test, robot]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +87,11 @@ jobs:
             if [ -e "$path" ]; then git add --force -- "$path"; fi
           done
           tree=$(git write-tree)
+          # robot/ tourne sur la machine du MX, jamais chez OVH (docs/relais.md).
+          if [ -n "$(git ls-tree --name-only "$tree" robot)" ]; then
+            echo "L'arbre publié contient robot/ : publication refusée." >&2
+            exit 1
+          fi
           # Le commit s'ajoute au précédent, jamais de push forcé ; ovh est créée au premier passage.
           if git fetch --depth=1 origin ovh; then set -- -p FETCH_HEAD; fi
           commit=$(git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \

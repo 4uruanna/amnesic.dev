@@ -1,0 +1,41 @@
+# Le Relais : Mailpit et le Robot (docs/relais.md § Conteneurs). Variables dans .env (§ Configuration).
+x-durci: &durci
+  user: "10001:10001"
+  read_only: true
+  tmpfs: /tmp
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  logging:
+    driver: local
+  restart: unless-stopped
+
+services:
+  mailpit:
+    <<: *durci
+    image: axllent/mailpit:v1.32.0
+    # Aucune option --smtp-relay-* : Mailpit deviendrait un relais ouvert.
+    command:
+      - --database=/data/mailpit.db
+      - --max=2000
+      - --max-age=7d
+      - --max-message-size=25
+      - --smtp-max-recipients=5
+      - --smtp-allowed-recipients=${MAILPIT_ALLOWED_RECIPIENTS:?MAILPIT_ALLOWED_RECIPIENTS absente ou vide dans .env}
+      - --ui-auth-file=/auth.txt
+      # Seul le Robot pose des étiquettes : un expéditeur ne peut pas étiqueter son mail « rejet ».
+      - --tags-disable=plus-addresses,x-tags
+    ports:
+      - 25:1025
+      - 127.0.0.1:8025:8025
+    volumes:
+      - ./data:/data
+      - ./auth.txt:/auth.txt:ro
+
+  robot:
+    <<: *durci
+    build: .
+    init: true
+    env_file: .env
+    depends_on:
+      mailpit:
+        condition: service_healthy

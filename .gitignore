@@ -7,3 +7,8 @@
 /skills-lock.json
 /package.json
 /pnpm-lock.yaml
+/robot/.env
+/robot/auth.txt
+/robot/data/
+/robot/vendor/
+/robot/compose.override.yaml

@@ -1,0 +1,6 @@
+# Seuls ces fichiers entrent dans l'image : jamais .env, auth.txt ni data/.
+*
+!composer.json
+!composer.lock
+!bin/
+!src/
