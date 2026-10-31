@@ -10,5 +10,5 @@ La purge horaire des Messages de plus de 30 jours, sa tâche cron sur OVH, et la
 ## Phases
 
 - [x] [J05-1 Purge](1-purge.md)
-- [ ] [J05-2 Cron OVH](2-cron-ovh.md)
-- [ ] [J05-3 Recette](3-recette.md)
+- [x] [J05-2 Cron OVH](2-cron-ovh.md)
+- [x] [J05-3 Recette](3-recette.md)

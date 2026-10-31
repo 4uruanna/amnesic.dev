@@ -145,10 +145,10 @@ SET @id = UUID();
 INSERT INTO accounts (id, name, role, created_at) VALUES (@id, 'admin', 'admin', UTC_TIMESTAMP(3));
 INSERT INTO tokens (id, account_id, name, hash, created_at)
   VALUES (UUID(), @id, 'bootstrap', SHA2(@token, 256), UTC_TIMESTAMP(3));
-SELECT @token AS token;
+SELECT LEFT(@token, 32) AS debut, RIGHT(@token, 32) AS fin;
 ```
 
-Le jeton affiché n'est stocké nulle part en clair : le copier tout de suite. `UUID()` produit un UUID v1 et non v7, sans conséquence pour un Compte.
+phpMyAdmin tronque à l'affichage tout texte de plus de 50 caractères : la requête montre donc le jeton en deux moitiés, à coller bout à bout, 64 caractères en tout. Ne pas raccourcir `RANDOM_BYTES(32)` : l'API refuse tout jeton qui ne fait pas 64 caractères. Le jeton n'est stocké nulle part en clair : le copier tout de suite. `UUID()` produit un UUID v1 et non v7, sans conséquence pour un Compte.
 
 ## Sauvegardes
 
