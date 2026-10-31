@@ -54,7 +54,10 @@ final class AuthenticationTest extends TestCase
         foreach ($statements as $statement) {
             $this->app->pdo->exec($statement);
         }
-        $token = $this->app->pdo->query($select)->fetch(PDO::FETCH_ASSOC)['token'];
+        // phpMyAdmin tronque un texte de plus de 50 caractères : le jeton s'affiche en deux moitiés.
+        ['debut' => $debut, 'fin' => $fin] = $this->app->pdo->query($select)->fetch(PDO::FETCH_ASSOC);
+        self::assertSame([32, 32], [strlen($debut), strlen($fin)]);
+        $token = $debut . $fin;
 
         self::assertSame(200, $this->get('/v1/messages', "Bearer $token")->getStatusCode());
     }
