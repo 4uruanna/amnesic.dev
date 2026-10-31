@@ -64,6 +64,10 @@ final class MessageDepositTest extends TestCase
             '2026-10-26T09:59:58Z' => '2026-10-26T09:59:58.000000',
             '2026-10-26t09:59:58.123456789z' => '2026-10-26T09:59:58.123456',
             '2026-10-26T00:30:00-05:30' => '2026-10-26T06:00:00.000000',
+            // Les bornes de DATETIME dans MySQL, en UTC.
+            '0000-01-01T00:00:00Z' => '0000-01-01T00:00:00.000000',
+            '9999-12-31T23:59:59.999Z' => '9999-12-31T23:59:59.999000',
+            '9999-12-31T23:00:00+05:00' => '9999-12-31T18:00:00.000000',
         ] as $sentAt => $utc) {
             self::assertSame("$utc+00:00", MessageDeposit::fromArray([...self::MINIMAL, 'sentAt' => $sentAt])->sentAt?->format('Y-m-d\TH:i:s.uP'));
         }
@@ -101,7 +105,7 @@ final class MessageDepositTest extends TestCase
         yield 'subject de plus de 998 caractères' => [[...self::MINIMAL, 'subject' => str_repeat('é', 999)], [['field' => 'subject', 'message' => 'Chaîne de 998 caractères au plus attendue.']]];
         yield 'subject pas une chaîne' => [[...self::MINIMAL, 'subject' => 1], [['field' => 'subject', 'message' => 'Chaîne de 998 caractères au plus attendue.']]];
 
-        foreach (['hier', '2026-10-26', '2026-10-26 09:59:58Z', '2026-10-26T09:59:58', '2026-10-26T09:59:58+0200', '2026-02-30T00:00:00Z', '2026-10-26T25:00:00Z', '2026-10-26T09:59:58+24:00', 1761472798] as $sentAt) {
+        foreach (['hier', '2026-10-26', '2026-10-26 09:59:58Z', '2026-10-26T09:59:58', '2026-10-26T09:59:58+0200', '2026-02-30T00:00:00Z', '2026-10-26T25:00:00Z', '2026-10-26T09:59:58+24:00', '9999-12-31T23:00:00-05:00', '0000-01-01T00:30:00+01:00', 1761472798] as $sentAt) {
             yield "sentAt $sentAt" => [[...self::MINIMAL, 'sentAt' => $sentAt], [['field' => 'sentAt', 'message' => 'Date RFC 3339 attendue.']]];
         }
 

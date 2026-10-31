@@ -34,7 +34,7 @@ final class MessageFilterTest extends TestCase
         foreach (['' => '', 'ci' => 'ci', 'tableau' => ['ci@x.tld']] as $case => $to) {
             yield "to $case" => [['to' => $to], [['field' => 'to', 'message' => 'Adresse mail invalide.']]];
         }
-        foreach (['hier', '', '2026-10-26', '2026-10-26T09:59:58', '2026-02-30T00:00:00Z'] as $since) {
+        foreach (['hier', '', '2026-10-26', '2026-10-26T09:59:58', '2026-02-30T00:00:00Z', '9999-12-31T23:00:00-05:00'] as $since) {
             yield "since $since" => [['since' => $since], [['field' => 'since', 'message' => 'Date RFC 3339 attendue.']]];
         }
         foreach (['2', '', 'true', '01', ['1']] as $unread) {

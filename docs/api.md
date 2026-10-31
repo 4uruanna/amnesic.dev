@@ -15,7 +15,7 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
 - **URL de base** : `https://api.amnesic.dev/v1`. HTTPS seulement : une requête en HTTP reçoit une redirection `301` (qu'un client ne doit pas suivre pour un `POST`, il appelle directement en HTTPS).
 - **Format** : JSON UTF-8. Un corps de requête porte `Content-Type: application/json`, sinon `415`. Un JSON mal formé reçoit `400`.
 - **Champs inconnus** : refusés (`422`) dans tout corps de requête, à tous les niveaux. Les paramètres de requête inconnus sont ignorés.
-- **Dates** : ISO 8601 / RFC 3339. En entrée, tout décalage horaire est accepté ; en sortie, toujours UTC à la milliseconde : `2026-10-26T09:59:58.000Z`.
+- **Dates** : ISO 8601 / RFC 3339. En entrée, tout décalage horaire est accepté, pourvu que la date reste, une fois en UTC, entre l'an 0000 et l'an 9999 : `9999-12-31T23:00:00-05:00` reçoit `422` ; en sortie, toujours UTC à la milliseconde : `2026-10-26T09:59:58.000Z`.
 - **Identifiants** : UUIDv7 en minuscules, `0192c8e4-7b1a-7c3e-9f00-5a4b3c2d1e0f`.
 - **Adresses mail** : validées (`FILTER_VALIDATE_EMAIL` de PHP : partie locale UTF-8 admise, domaine en ASCII, donc un IDN en punycode), puis mises en minuscules. Toute comparaison se fait sur l'adresse exacte en minuscules.
 - **Pagination** : `?offset=` (défaut `0`) et `?limit=` (défaut `20`, de `1` à `100`). Une valeur hors bornes reçoit `422`. Réponse :

@@ -97,6 +97,17 @@ final class MessageControllerTest extends TestCase
         self::assertSame([['field' => 'cc', 'message' => 'Champ inconnu.']], TestApp::json($response)['errors']);
     }
 
+    /** MySQL ne garde dans un DATETIME que les années 0000 à 9999 : au-delà en UTC, la date est refusée au lieu d'une 500. */
+    public function testSentAtIsStoredFromYear0000To9999InUtc(): void
+    {
+        foreach (['0000-01-01T00:00:00Z' => '0000-01-01 00:00:00.000', '9999-12-31T23:59:59.999Z' => '9999-12-31 23:59:59.999'] as $sentAt => $stored) {
+            $id = TestApp::json($this->app->request('POST', '/v1/messages', $this->bot, [...self::MINIMAL, 'sentAt' => $sentAt]))['id'];
+            self::assertSame([$stored], $this->rows("SELECT sent_at FROM messages WHERE id = '$id'", PDO::FETCH_COLUMN));
+        }
+        self::assertProblem($this->app->request('POST', '/v1/messages', $this->bot, [...self::MINIMAL, 'sentAt' => '9999-12-31T23:00:00-05:00']), 422, 'Le corps de la requête est invalide.');
+        self::assertProblem($this->app->request('GET', '/v1/messages?since=' . rawurlencode('9999-12-31T23:00:00-05:00'), $this->app->token('admin')), 422, 'Les paramètres de la requête sont invalides.');
+    }
+
     public function testBodyOver25MiBIs413(): void
     {
         // Taille réellement lue, sans Content-Length : 26 Mio.
