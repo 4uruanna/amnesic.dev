@@ -45,20 +45,42 @@ jobs:
       - run: composer install --no-interaction --no-progress
       - run: vendor/bin/phpunit
 
-  # Le Robot du Relais, projet Composer à part dans robot/ (docs/relais.md § Développement local et tests).
+  # Le Robot du Relais, projet Composer à part dans robot/, testé contre la vraie API (docs/relais.md § Développement local et tests).
   robot:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: robot
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci # mot de passe jetable du conteneur de CI, pas un secret
+          MYSQL_DATABASE: apimail_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 --silent" --health-interval=2s --health-retries=60
     steps:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          extensions: pdo_mysql
           coverage: none
+      - name: Write config.php
+        run: |
+          cat > config.php <<'PHP'
+          <?php
+
+          declare(strict_types=1);
+
+          const API_MAIL_DB_HOST = '127.0.0.1';
+          const API_MAIL_DB_NAME = 'apimail_test';
+          const API_MAIL_DB_USER = 'root';
+          const API_MAIL_DB_PASSWORD = 'ci';
+          PHP
       - run: composer install --no-interaction --no-progress
+      - run: composer install --no-interaction --no-progress
+        working-directory: robot
       - run: vendor/bin/phpunit
+        working-directory: robot
 
   publish:
     needs: [test, robot]

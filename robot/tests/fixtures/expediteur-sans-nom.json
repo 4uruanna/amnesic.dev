@@ -1,0 +1,36 @@
+{
+    "message": {
+        "ID": "5fKrAYHjOwxLNbiTJdH42F",
+        "MessageID": "expediteur-sans-nom@service.example",
+        "From": {
+            "Name": "",
+            "Address": "noreply@service.example"
+        },
+        "To": [
+            {
+                "Name": "",
+                "Address": "ci@example.com"
+            }
+        ],
+        "Cc": [],
+        "Bcc": [],
+        "ReplyTo": [],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Sans nom",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T12:04:00Z",
+        "Tags": [],
+        "Username": "",
+        "Text": "Expéditeur sans nom.\r\n",
+        "HTML": "",
+        "Size": 462,
+        "Inline": [],
+        "Attachments": []
+    },
+    "parts": {}
+}

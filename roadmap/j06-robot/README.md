@@ -12,5 +12,5 @@ Le robot du Relais, sur le poste : il relève un Mailpit en conteneur, convertit
 ## Phases
 
 - [ ] [J06-1 Squelette du robot](1-squelette-du-robot.md)
-- [ ] [J06-2 Conversion](2-conversion.md)
+- [x] [J06-2 Conversion](2-conversion.md)
 - [ ] [J06-3 Relève](3-releve.md)

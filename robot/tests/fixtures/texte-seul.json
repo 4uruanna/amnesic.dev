@@ -1,0 +1,36 @@
+{
+    "message": {
+        "ID": "0YHcyuPrkPNCqjZxAWayl6",
+        "MessageID": "texte-seul@service.example",
+        "From": {
+            "Name": "Service CI",
+            "Address": "noreply@service.example"
+        },
+        "To": [
+            {
+                "Name": "Équipe CI",
+                "Address": "ci@example.com"
+            }
+        ],
+        "Cc": [],
+        "Bcc": [],
+        "ReplyTo": [],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Votre code",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T11:59:58+01:00",
+        "Tags": [],
+        "Username": "",
+        "Text": "Code : 123456\r\n",
+        "HTML": "",
+        "Size": 497,
+        "Inline": [],
+        "Attachments": []
+    },
+    "parts": {}
+}

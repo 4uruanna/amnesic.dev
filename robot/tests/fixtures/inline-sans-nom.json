@@ -1,0 +1,51 @@
+{
+    "message": {
+        "ID": "6xKKU8rPXZ195AKGjiUjfC",
+        "MessageID": "inline-sans-nom@service.example",
+        "From": {
+            "Name": "Service CI",
+            "Address": "noreply@service.example"
+        },
+        "To": [
+            {
+                "Name": "",
+                "Address": "ci@example.com"
+            }
+        ],
+        "Cc": [],
+        "Bcc": [],
+        "ReplyTo": [],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Logo",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T12:02:00Z",
+        "Tags": [],
+        "Username": "",
+        "Text": "Logo ci-dessous.",
+        "HTML": "<p>Logo :</p><img src=\"cid:logo@service.example\">",
+        "Size": 920,
+        "Inline": [
+            {
+                "PartID": "2",
+                "FileName": "logo@service.example",
+                "ContentType": "image/png",
+                "ContentID": "logo@service.example",
+                "Size": 70,
+                "Checksums": {
+                    "MD5": "2cd8bde463f5d82aae0f0cec061d6b8f",
+                    "SHA1": "b2bbe763c7e1828c750d53f78550709a6fea19be",
+                    "SHA256": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+                }
+            }
+        ],
+        "Attachments": []
+    },
+    "parts": {
+        "2": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "message": {
+        "ID": "1HIp9uRCoonjqHFrtttE2K",
+        "MessageID": "cc-bcc@service.example",
+        "From": {
+            "Name": "Service CI",
+            "Address": "noreply@service.example"
+        },
+        "To": [
+            {
+                "Name": "",
+                "Address": "ci@example.com"
+            }
+        ],
+        "Cc": [
+            {
+                "Name": "Copie",
+                "Address": "copie@example.com"
+            }
+        ],
+        "Bcc": [
+            {
+                "Name": "",
+                "Address": "cachee@example.com"
+            }
+        ],
+        "ReplyTo": [],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Avec copie",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T12:03:00Z",
+        "Tags": [],
+        "Username": "",
+        "Text": "En copie et en copie cachée.\r\n",
+        "HTML": "",
+        "Size": 515,
+        "Inline": [],
+        "Attachments": []
+    },
+    "parts": {}
+}

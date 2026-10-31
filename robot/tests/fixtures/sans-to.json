@@ -1,0 +1,36 @@
+{
+    "message": {
+        "ID": "7WTAQXJ6Bozw6RbgUfjJzF",
+        "MessageID": "sans-to@service.example",
+        "From": {
+            "Name": "Service CI",
+            "Address": "noreply@service.example"
+        },
+        "To": [],
+        "Cc": [],
+        "Bcc": [
+            {
+                "Name": "",
+                "Address": "ci@example.com"
+            }
+        ],
+        "ReplyTo": [],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Copie cachée seule",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T12:05:00Z",
+        "Tags": [],
+        "Username": "",
+        "Text": "Envoyé en Bcc seul.\r\n",
+        "HTML": "",
+        "Size": 462,
+        "Inline": [],
+        "Attachments": []
+    },
+    "parts": {}
+}

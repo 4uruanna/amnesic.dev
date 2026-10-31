@@ -1,0 +1,68 @@
+{
+    "message": {
+        "ID": "36Jmas1QV19Y5yUMkgPr6u",
+        "MessageID": "piece-jointe@service.example",
+        "From": {
+            "Name": "Service CI",
+            "Address": "noreply@service.example"
+        },
+        "To": [
+            {
+                "Name": "",
+                "Address": "ci@example.com"
+            },
+            {
+                "Name": "Autre",
+                "Address": "autre@example.com"
+            }
+        ],
+        "Cc": [],
+        "Bcc": [],
+        "ReplyTo": [],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Facture",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T12:01:00+02:00",
+        "Tags": [],
+        "Username": "",
+        "Text": "Votre facture est jointe.",
+        "HTML": "",
+        "Size": 979,
+        "Inline": [],
+        "Attachments": [
+            {
+                "PartID": "2",
+                "FileName": "facture.pdf",
+                "ContentType": "application/pdf",
+                "ContentID": "",
+                "Size": 52,
+                "Checksums": {
+                    "MD5": "385c17efc8831be4f55fbd3bd41063f9",
+                    "SHA1": "8b842389d9212b61f0522cb28a1980714525091a",
+                    "SHA256": "67cb805e1d334d82c8b1b2f21cd68c6d31410bc7760f5eda7efb749bcc62c7e4"
+                }
+            },
+            {
+                "PartID": "3",
+                "FileName": "été.txt",
+                "ContentType": "text/plain",
+                "ContentID": "",
+                "Size": 6,
+                "Checksums": {
+                    "MD5": "2c392b077cb76c7f3d33d156372ea9e9",
+                    "SHA1": "a6ef0c9d964099c4e2f5729e2efcdec5694acd16",
+                    "SHA256": "ac68ea8c75b70bbdab368d1d15defd92dbac45088a633fe8bab3355cb895dd77"
+                }
+            }
+        ]
+    },
+    "parts": {
+        "2": "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nPj4KZW5kb2JqCg==",
+        "3": "w6l0w6kK"
+    }
+}

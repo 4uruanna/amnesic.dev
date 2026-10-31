@@ -23,6 +23,8 @@ robot/
     Conversion.php   message Mailpit → MessageDeposit
     Relais.php       un cycle : relever, déposer, puis supprimer ou étiqueter
   tests/
+    fixtures/        messages Mailpit capturés (GET /api/v1/message/{ID}), avec le contenu de leurs parts
+    apimail.php      la vraie API sur apimail_test : routeur de php -S, ou remise à neuf de la base en CLI
   .env, auth.txt, data/, vendor/, compose.override.yaml   propres à chaque installation, ignorés par git
 ```
 
@@ -84,6 +86,8 @@ Un cycle plus long que `POLL_SECONDS` enchaîne directement sur le suivant. Un s
 | `text`, `html` | `Text`, `HTML` ; une chaîne vide devient `null` |
 | `attachments` | `Attachments` puis `Inline`, dans cet ordre : `filename` = `FileName`, ou `partie-<PartID>` s'il est vide ; `contentType` = `ContentType` ; `content` = le contenu de la part, en base64 |
 
+Ce que Mailpit donne, relevé sur la version 1.32 : pour un mail en HTML seul, il tire `Text` du HTML ; une image inline sans nom de fichier prend son `Content-ID` pour `FileName` ; une pièce qui n'a ni nom de fichier ni `Content-ID` ne figure ni dans `Attachments` ni dans `Inline`, et n'est donc pas déposée. Un mail sans en-tête `From` a un `From` vide, et sans en-tête `Date`, sa date de réception.
+
 Le robot ne valide rien lui-même : l'API est seule juge du contrat. Un mail sans `To` (envoyé en `Bcc` seul), une adresse invalide ou un sujet de plus de 998 caractères reçoivent donc `422` et restent dans Mailpit, étiquetés. Un mail proche des 25 Mo de `--max-message-size` peut dépasser, une fois en JSON, les 25 Mio du dépôt : il reçoit `413`, avec le même sort.
 
 ## Erreurs
@@ -127,12 +131,15 @@ Mise à jour : `git pull && docker compose up -d --build` dans `robot/`. Rien n'
 - **Intégration** : un cycle contre un vrai Mailpit en conteneur et la vraie API (`php -S` sur `public/`, base `apimail_test`), sans mocks. Les mails de test entrent par l'API d'envoi de Mailpit, `POST /api/v1/send`.
 - **CI** : un job `robot` dans `.github/workflows/ci.yml`, avec les services MySQL et Mailpit. Le job `publish` attend aussi celui-ci, et échoue si l'arbre publié sur `ovh` contient `robot/`.
 
-Comme pour l'API, Composer et PHPUnit tournent dans Docker, en PHP 8.4 ([infra.md § Développement local](infra.md#développement-local)) :
+Comme pour l'API, Composer et PHPUnit tournent dans Docker, en PHP 8.4, dans l'environnement de [infra.md § Développement local](infra.md#développement-local) : les tests d'intégration lancent l'API par `php -S` et ont besoin de son `vendor/`, de son `config.php` et de MySQL. Depuis la racine du dépôt :
 
 ```sh
 docker run --rm -u "$(id -u):$(id -g)" -v "$PWD/robot":/app -w /app composer:2 install
-docker run --rm -u "$(id -u):$(id -g)" -v "$PWD/robot":/app -w /app php:8.4-cli vendor/bin/phpunit
+API_MAIL_DB_PASSWORD="$(php -r 'require "config.php"; echo API_MAIL_DB_PASSWORD;')" docker compose up -d --wait mysql
+docker compose run --rm --no-deps -u "$(id -u):$(id -g)" -w /app/robot php vendor/bin/phpunit
 ```
+
+`tests/apimail.php` sert l'API avec la base `apimail_test`, quel que soit `API_MAIL_DB_NAME`, comme les tests de l'API ; il emprunte à ceux-ci `TestApp` et `TestDatabase`, le robot lui-même n'utilise aucun code de l'API.
 
 Pour faire tourner le Relais sur le poste, dans `robot/` : `.env` rempli ; `auth.txt` écrit par `php -r 'echo "mailpit:", password_hash($argv[1], PASSWORD_BCRYPT), "\n";' "<mot de passe>" > auth.txt`, le même mot de passe dans `MAILPIT_PASS` ; `data/` donné à l'utilisateur `10001` sans `sudo` par `docker run --rm -v "$PWD/data:/data" busybox chown 10001:10001 /data` ; puis `docker compose up -d --build`. Pour ne pas ouvrir le port 25 du poste, un `compose.override.yaml`, ignoré par git, remplace les ports de `mailpit` :
 
