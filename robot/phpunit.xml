@@ -11,4 +11,11 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <!-- Le Mailpit de compose.yaml à la racine, comme celui de la CI : identifiants jetables, pas un secret. -->
+        <env name="MAILPIT_URL" value="http://127.0.0.1:8025"/>
+        <env name="MAILPIT_SMTP" value="smtp://127.0.0.1:1025"/>
+        <env name="MAILPIT_USER" value="mailpit"/>
+        <env name="MAILPIT_PASS" value="test"/>
+    </php>
 </phpunit>

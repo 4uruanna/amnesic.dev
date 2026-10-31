@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 // Le Robot du Relais (docs/relais.md) : vérifie la configuration, puis relève Mailpit toutes les POLL_SECONDS.
 
+use Robot\Apimail;
+use Robot\Mailpit;
+use Robot\Relais;
+
 require __DIR__ . '/../vendor/autoload.php';
 
 $config = [];
@@ -22,8 +26,22 @@ if (preg_match('/\A[1-9][0-9]*\z/', $config['POLL_SECONDS']) !== 1) {
 }
 $poll = (int) $config['POLL_SECONDS'];
 
+$relais = new Relais(
+    new Mailpit($config['MAILPIT_URL'], $config['MAILPIT_USER'], $config['MAILPIT_PASS']),
+    new Apimail($config['APIMAIL_URL'], $config['APIMAIL_TOKEN']),
+    function (string $line): void {
+        echo "$line\n";
+    },
+);
+
 echo "started\n";
 
+// Un cycle plus long que POLL_SECONDS enchaîne directement sur le suivant.
 while (true) {
-    sleep($poll);
+    $start = hrtime(true);
+    $relais->cycle();
+    $rest = $poll * 1_000_000 - intdiv(hrtime(true) - $start, 1000);
+    if ($rest > 0) {
+        usleep($rest);
+    }
 }

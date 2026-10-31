@@ -57,6 +57,14 @@ jobs:
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping -h 127.0.0.1 --silent" --health-interval=2s --health-retries=60
+      # Même version que robot/compose.yaml ; identifiants de robot/phpunit.xml, jetables.
+      mailpit:
+        image: axllent/mailpit:v1.32.0
+        env:
+          MP_UI_AUTH: mailpit:test
+        ports:
+          - 1025:1025
+          - 8025:8025
     steps:
       - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2

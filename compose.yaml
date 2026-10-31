@@ -1,4 +1,4 @@
-# Environnement local des tests : docs/infra.md § Développement local.
+# Environnement local des tests : docs/infra.md § Développement local, et docs/relais.md pour le robot.
 services:
   mysql:
     image: mysql:8.4
@@ -33,3 +33,10 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+
+  # Mailpit des tests du robot (docs/relais.md § Développement local et tests), sur le réseau de mysql lui aussi.
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    environment:
+      MP_UI_AUTH: mailpit:test # identifiants jetables des tests, pas un secret
+    network_mode: service:mysql
