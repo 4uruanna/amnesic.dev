@@ -3,7 +3,7 @@
         'name' => 'apimail/apimail',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'd26265022c2b8eb1693116ff4bc49b102f5a362f',
+        'reference' => 'd7ec58d06f7f20870282b8a93d7a3e3d0779ff80',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'apimail/apimail' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'd26265022c2b8eb1693116ff4bc49b102f5a362f',
+            'reference' => 'd7ec58d06f7f20870282b8a93d7a3e3d0779ff80',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
