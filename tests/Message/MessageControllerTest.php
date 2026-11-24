@@ -29,6 +29,7 @@ final class MessageControllerTest extends TestCase
     public function testBotDepositsAMessageStoredInDatabaseAndOnDisk(): void
     {
         $pdf = "%PDF-1.7\x00\xff\xfe" . random_bytes(1000);
+        $raw = "From: Service <NoReply@Service.tld>\r\nTo: CI <CI@amnesic.dev>\r\nCc: copie@amnesic.dev\r\n\r\nCaf\xe9\n\x00";
         $before = gmdate('Y-m-d H:i:s');
 
         $response = $this->app->request('POST', '/v1/messages', $this->bot, [
@@ -42,6 +43,7 @@ final class MessageControllerTest extends TestCase
                 ['filename' => 'facture é.pdf', 'contentType' => 'application/pdf', 'content' => base64_encode($pdf)],
                 ['filename' => 'vide.txt', 'contentType' => 'text/plain; charset=utf-8', 'content' => ''],
             ],
+            'raw' => base64_encode($raw),
         ]);
 
         self::assertSame(201, $response->getStatusCode());
@@ -65,12 +67,13 @@ final class MessageControllerTest extends TestCase
         );
 
         $directory = "{$this->app->storage}/messages/$id";
-        self::assertSame(['html', 'parts', 'text'], self::list($directory));
+        self::assertSame(['html', 'parts', 'raw', 'text'], self::list($directory));
         self::assertSame(['1', '2'], self::list("$directory/parts"));
         self::assertSame("Code : 123456\r\n", file_get_contents("$directory/text"));
         self::assertSame('<p>Code : <b>123456</b></p>', file_get_contents("$directory/html"));
         self::assertSame($pdf, file_get_contents("$directory/parts/1"));
         self::assertSame('', file_get_contents("$directory/parts/2"));
+        self::assertSame($raw, file_get_contents("$directory/raw"));
     }
 
     public function testMinimalDepositWritesNoFile(): void
@@ -79,6 +82,13 @@ final class MessageControllerTest extends TestCase
 
         self::assertSame([[$id, '', null]], $this->rows('SELECT id, subject, sent_at FROM messages', PDO::FETCH_NUM));
         self::assertSame([], self::list("{$this->app->storage}/messages/$id"));
+    }
+
+    public function testADepositWithANullRawWritesNoOriginal(): void
+    {
+        $id = TestApp::json($this->app->request('POST', '/v1/messages', $this->bot, [...self::MINIMAL, 'text' => 'Code', 'raw' => null]))['id'];
+
+        self::assertSame(['text'], self::list("{$this->app->storage}/messages/$id"));
     }
 
     public function testOnlyABotDeposits(): void
@@ -108,20 +118,20 @@ final class MessageControllerTest extends TestCase
         self::assertProblem($this->app->request('GET', '/v1/messages?since=' . rawurlencode('9999-12-31T23:00:00-05:00'), $this->app->token('admin')), 422, 'Les paramètres de la requête sont invalides.');
     }
 
-    public function testBodyOver25MiBIs413(): void
+    public function testBodyOver32MiBIs413(): void
     {
-        // Taille réellement lue, sans Content-Length : 26 Mio.
-        $response = $this->app->request('POST', '/v1/messages', $this->bot, '"' . str_repeat('a', 26 * 1024 * 1024 - 2) . '"');
-        self::assertProblem($response, 413, 'Corps de plus de 25 Mio.');
+        // Taille réellement lue, sans Content-Length : 32 Mio et un octet.
+        $response = $this->app->request('POST', '/v1/messages', $this->bot, '"' . str_repeat('a', 32 * 1024 * 1024 - 1) . '"');
+        self::assertProblem($response, 413, 'Corps de plus de 32 Mio.');
         self::assertSame('Content Too Large', TestApp::json($response)['title']);
 
         // Content-Length annoncé, avant toute lecture.
         $request = (new ServerRequestFactory())->createServerRequest('POST', '/v1/messages')
             ->withHeader('Authorization', "Bearer {$this->bot}")
             ->withHeader('Content-Type', 'application/json')
-            ->withHeader('Content-Length', (string) (26 * 1024 * 1024));
+            ->withHeader('Content-Length', (string) (32 * 1024 * 1024 + 1));
         $request->getBody()->write(json_encode(self::MINIMAL));
-        self::assertProblem($this->app->handle($request), 413, 'Corps de plus de 25 Mio.');
+        self::assertProblem($this->app->handle($request), 413, 'Corps de plus de 32 Mio.');
 
         self::assertSame([], $this->rows('SELECT id FROM messages'));
     }
@@ -405,7 +415,7 @@ final class MessageControllerTest extends TestCase
 
     public function testUserDeletesASharedMessageForEveryAccount(): void
     {
-        $id = $this->deposit(['ci@x.tld', 'ops@x.tld'], ['text' => 'Code', 'attachments' => [['filename' => 'a.txt', 'contentType' => 'text/plain', 'content' => 'SGVsbG8=']]]);
+        $id = $this->deposit(['ci@x.tld', 'ops@x.tld'], ['text' => 'Code', 'attachments' => [['filename' => 'a.txt', 'contentType' => 'text/plain', 'content' => 'SGVsbG8=']], 'raw' => 'SGVsbG8=']);
         $kept = $this->deposit(['ci@x.tld'], ['text' => 'Gardé']);
         $ci = $this->user('ci', 'ci@x.tld');
         $ops = $this->user('ops', 'ops@x.tld');

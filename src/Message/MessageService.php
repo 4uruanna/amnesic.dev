@@ -49,7 +49,7 @@ final class MessageService
 
         // Fichiers d'abord : une ligne messages implique que ses fichiers existent (data-model.md § Fichiers).
         try {
-            $this->files->write($message->id, $input->text, $input->html, array_map(fn (AttachmentDeposit $a) => $a->content, $input->attachments));
+            $this->files->write($message->id, $input->text, $input->html, array_map(fn (AttachmentDeposit $a) => $a->content, $input->attachments), $input->raw);
             $this->pdo->beginTransaction();
             $this->messages->insert($message, $recipients, $attachments);
             $this->pdo->commit();

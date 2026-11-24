@@ -16,12 +16,15 @@ final class MessageFiles
     {
     }
 
-    /** @param list<string> $parts le contenu décodé des pièces jointes, dans l'ordre des partId */
-    public function write(string $id, ?string $text, ?string $html, array $parts): void
+    /**
+     * @param list<string> $parts le contenu décodé des pièces jointes, dans l'ordre des partId
+     * @param ?string $raw l'Original, décodé
+     */
+    public function write(string $id, ?string $text, ?string $html, array $parts, ?string $raw): void
     {
         $directory = $this->directory($id);
         self::mkdir($directory);
-        foreach (['text' => $text, 'html' => $html] as $name => $content) {
+        foreach (['text' => $text, 'html' => $html, 'raw' => $raw] as $name => $content) {
             if ($content !== null) {
                 self::put("$directory/$name", $content);
             }

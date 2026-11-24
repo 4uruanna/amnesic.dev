@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Apimail\Message\Dto;
 
+use Apimail\Shared\Base64;
 use Apimail\Shared\Rfc3339;
 use Apimail\Shared\ValidationFailed;
 use DateTimeImmutable;
 
-/** Entrée de POST /v1/messages : le mail déjà découpé par le Relais (ADR 0006). */
+/** Entrée de POST /v1/messages : le mail déjà découpé par le Relais (ADR 0006), et son Original, gardé sans être lu (ADR 0016). */
 final readonly class MessageDeposit
 {
     /**
      * @param list<Address> $to sans adresse répétée
      * @param list<AttachmentDeposit> $attachments dans l'ordre des partId
+     * @param ?string $raw l'Original, décodé
      */
     private function __construct(
         public Address $from,
@@ -23,6 +25,7 @@ final readonly class MessageDeposit
         public ?string $text,
         public ?string $html,
         public array $attachments,
+        public ?string $raw,
     ) {
     }
 
@@ -30,7 +33,7 @@ final readonly class MessageDeposit
     public static function fromArray(array $data): self
     {
         $errors = [];
-        foreach (array_diff(array_keys($data), ['from', 'to', 'subject', 'sentAt', 'text', 'html', 'attachments']) as $field) {
+        foreach (array_diff(array_keys($data), ['from', 'to', 'subject', 'sentAt', 'text', 'html', 'attachments', 'raw']) as $field) {
             $errors[] = ['field' => (string) $field, 'message' => 'Champ inconnu.'];
         }
 
@@ -79,11 +82,16 @@ final readonly class MessageDeposit
             }
         }
 
+        $raw = isset($data['raw']) ? Base64::decode($data['raw']) : null;
+        if (isset($data['raw']) && $raw === null) {
+            $errors[] = ['field' => 'raw', 'message' => 'Base64 standard attendu.'];
+        }
+
         if ($errors !== []) {
             throw new ValidationFailed($errors);
         }
 
-        return new self($from, array_values($to), $subject, $sentAt, $data['text'] ?? null, $data['html'] ?? null, $attachments);
+        return new self($from, array_values($to), $subject, $sentAt, $data['text'] ?? null, $data['html'] ?? null, $attachments, $raw);
     }
 
     /**
