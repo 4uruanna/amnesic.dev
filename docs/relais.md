@@ -23,7 +23,7 @@ robot/
     Conversion.php   message Mailpit → MessageDeposit
     Relais.php       un cycle : relever, déposer, puis supprimer ou étiqueter
   tests/
-    fixtures/        messages Mailpit capturés (GET /api/v1/message/{ID}), avec le contenu de leurs parts
+    fixtures/        messages Mailpit capturés (GET /api/v1/message/{ID}), avec le contenu de leurs parts, et pour l'un son mail /raw
     apimail.php      la vraie API sur apimail_test : routeur de php -S, ou remise à neuf de la base en CLI
   .env, auth.txt, data/, vendor/, compose.override.yaml   propres à chaque installation, ignorés par git
 ```
@@ -69,7 +69,7 @@ Toutes les `POLL_SECONDS` secondes, le robot :
 
 1. demande à Mailpit les messages sans étiquette `rejet` : `GET /api/v1/search?query=!tag:rejet`, par pages de 50, jusqu'à une page incomplète ; Mailpit les donne du plus récent au plus ancien, et un mail arrivé entre deux pages, qui décale les suivantes, n'est compté qu'une fois ;
 2. traite chacun, du plus ancien au plus récent, pour que l'API les reçoive dans l'ordre :
-   1. `GET /api/v1/message/{ID}`, puis `GET /api/v1/message/{ID}/part/{PartID}` pour chaque pièce ;
+   1. `GET /api/v1/message/{ID}`, puis `GET /api/v1/message/{ID}/part/{PartID}` pour chaque pièce, puis `GET /api/v1/message/{ID}/raw`, le mail reçu ;
    2. le convertit ([Conversion](#conversion)) ;
    3. le dépose par `POST /v1/messages`, avec un délai de 300 s, et agit selon la réponse ([Erreurs](#erreurs)).
 
@@ -85,18 +85,22 @@ Un cycle plus long que `POLL_SECONDS` enchaîne directement sur le suivant. Un s
 | `sentAt` | `Date` |
 | `text`, `html` | `Text`, `HTML` ; une chaîne vide devient `null` |
 | `attachments` | `Attachments` puis `Inline`, dans cet ordre : `filename` = `FileName`, ou `partie-<PartID>` s'il est vide ; `contentType` = `ContentType` ; `content` = le contenu de la part, en base64 |
+| `raw` | l'Original : le mail de `/raw`, sans ses en-têtes `Bcc` ni l'en-tête `Received` de Mailpit, en base64 ; `null` au redépôt qui suit un `413` ([ADR 0016](adr/0016-original-pour-export-eml.md)) |
 
 Ce que Mailpit donne, relevé sur la version 1.32 : pour un mail en HTML seul, il tire `Text` du HTML ; une image inline sans nom de fichier prend son `Content-ID` pour `FileName` ; une pièce qui n'a ni nom de fichier ni `Content-ID` ne figure ni dans `Attachments` ni dans `Inline`, et n'est donc pas déposée. Un mail sans en-tête `From` a un `From` vide, et sans en-tête `Date`, sa date de réception.
 
-Le robot ne valide rien lui-même : l'API est seule juge du contrat. Un mail sans `To` (envoyé en `Bcc` seul), une adresse invalide, un sujet de plus de 998 caractères ou une `Date` qui sort, en UTC, des années 0000 à 9999 reçoivent donc `422` et restent dans Mailpit, étiquetés. Un mail proche des 25 Mo de `--max-message-size` peut dépasser, une fois en JSON, les 25 Mio du dépôt : il reçoit `413`, avec le même sort.
+`/raw` rend le mail reçu en SMTP octet pour octet, fins de ligne comprises, avec ce que Mailpit y ajoute en le recevant : en tête, un en-tête `Bcc` qui liste les destinataires de l'enveloppe absents de `To` et `Cc`, son en-tête `Received` (`by … (Mailpit) with SMTP`), dont le `for` nomme le premier destinataire de l'enveloppe, caché ou non, et un `Message-ID` s'il n'y en avait pas ; puis `Return-Path`, posé à l'expéditeur de l'enveloppe, en tête s'il manquait, à la place de l'ancien sinon. Le robot retire tout en-tête `Bcc` et celui `Received` de Mailpit, qui trahiraient un destinataire caché ; `Message-ID` et `Return-Path` restent, comme les pose tout serveur qui remet un mail.
+
+Le robot ne valide rien lui-même : l'API est seule juge du contrat. Un mail sans `To` (envoyé en `Bcc` seul), une adresse invalide, un sujet de plus de 998 caractères ou une `Date` qui sort, en UTC, des années 0000 à 9999 reçoivent donc `422` et restent dans Mailpit, étiquetés. Avec l'Original, un dépôt pèse environ 2,3 fois le mail : au-delà de 14 Mo environ, il dépasse les 32 Mio du dépôt, et l'API répond `413`. Le robot redépose alors aussitôt le mail sans l'Original ; ce Message-là ne s'exportera pas. Un mail proche des 25 Mo de `--max-message-size` peut dépasser les 32 Mio même sans l'Original : il reçoit encore `413`, et le même sort que les mails refusés.
 
 ## Erreurs
 
 | Réponse | Action du robot |
 |---|---|
 | `201` | supprime le message de Mailpit : `DELETE /api/v1/messages`, `{ "IDs": [ID] }` |
-| `400`, `413`, `415`, `422` | l'étiquette `rejet` (`PUT /api/v1/tags`) : il reste visible dans l'interface de Mailpit jusqu'à `--max-age` ou `--max`, et le robot ne le reprend plus |
-| `400` de Mailpit sur le message ou une de ses parts | la même étiquette, sans dépôt : Mailpit ne saura jamais le rendre. C'est le cas d'un en-tête `Date` en `+2400`, qu'il lit mais ne sait pas écrire en JSON |
+| `413` d'un dépôt avec l'Original | redépose aussitôt le mail sans l'Original (`raw` à `null`), puis agit selon cette seconde réponse |
+| `400`, `413` sans l'Original, `415`, `422` | l'étiquette `rejet` (`PUT /api/v1/tags`) : il reste visible dans l'interface de Mailpit jusqu'à `--max-age` ou `--max`, et le robot ne le reprend plus |
+| `400` de Mailpit sur le message, une de ses parts ou son mail `/raw` | la même étiquette, sans dépôt : Mailpit ne saura jamais le rendre. C'est le cas d'un en-tête `Date` en `+2400`, qu'il lit mais ne sait pas écrire en JSON |
 | `401`, `403` | jeton faux ou révoqué : ne touche à rien, abandonne le cycle ; le suivant réessaie |
 | `5xx`, tout autre code (une redirection, la `404` d'une `APIMAIL_URL` fausse…), délai dépassé, erreur réseau | ne touche à rien, abandonne le cycle ; le suivant réessaie |
 | Mailpit injoignable, ou toute autre réponse de Mailpit que `200` et `400` (un mail supprimé dans l'interface pendant le cycle…) | abandonne le cycle ; le suivant réessaie |
@@ -114,7 +118,7 @@ Si la réponse `201` se perd (délai dépassé) ou si la suppression échoue, le
 Une ligne par événement sur la sortie standard, lue par `docker compose logs robot`, sans jamais de jeton ni de contenu de mail :
 
 - `started`, au démarrage ;
-- `deposited <ID Mailpit> <id apimail>` ;
+- `deposited <ID Mailpit> <id apimail>`, suivi de ` without raw` pour un mail redéposé sans l'Original ;
 - `rejected <ID Mailpit> <code> <field>: <message>`, une par erreur de la réponse ; une `400`, `413` ou `415`, qui n'a pas d'`errors`, donne une seule ligne, avec un `field` vide et son `detail` ; `rejected <ID Mailpit> mailpit 400` pour un mail que Mailpit ne sait pas rendre ;
 - `retry <cause>`, quand un cycle est abandonné : `retry apimail 401`, `retry apimail 503`, `retry apimail: <erreur de curl>` (délai, réseau), `retry mailpit 404`, `retry mailpit: <erreur de curl>`.
 

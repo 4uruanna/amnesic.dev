@@ -9,7 +9,11 @@ Un mail reçu, stocké et exposé par l'API. Identifié par un UUIDv7.
 _Avoid_ : email, courriel
 
 **Destinataire** (`recipient`) :
-Une adresse du champ `To` d'un **Message**. Seul `To` compte : `Cc` et `Bcc` n'existent pas pour l'API.
+Une adresse du champ `To` d'un **Message**. Seul `To` compte : `Cc` et `Bcc` n'existent pas pour l'API, hors de l'**Original**, qui garde l'en-tête `Cc`.
+
+**Original** (`raw`) :
+Le mail d'un **Message** tel que le **Relais** l'a reçu en SMTP (RFC 5322), sans rien qui nomme un destinataire caché. L'API le garde à côté du découpage, sans jamais le lire, et le rend tel quel par l'export EML ([ADR 0016](docs/adr/0016-original-pour-export-eml.md)).
+_Avoid_ : mail brut, source, EML (c'est le format de l'export)
 
 **Compte** (`Account`) :
 Ce qui s'authentifie auprès de l'API. Il a exactement un rôle : `admin`, `user` ou `bot`.
@@ -38,6 +42,7 @@ _Avoid_ : bot (c'est son **Compte**, pas le programme)
 ## Relationships
 
 - Un **Message** a un ou plusieurs **Destinataires**.
+- Un **Message** a zéro ou un **Original** : aucun s'il a été déposé sans lui.
 - Un **Compte** `user` voit et supprime un **Message** si l'un de ses **Bindings** porte sur l'un de ses **Destinataires**.
 - Un **Compte** `admin` voit et supprime tous les **Messages**, et gère les **Comptes**, **Bindings** et **Jetons**.
 - Un **Compte** a zéro ou plusieurs **Jetons** et zéro ou plusieurs **Bindings**.
