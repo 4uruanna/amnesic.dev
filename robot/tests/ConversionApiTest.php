@@ -39,6 +39,13 @@ final class ConversionApiTest extends TestCase
             self::assertSame(200, $code);
             self::assertSame(base64_decode($attachment['content'], true), $content);
         }
+        // L'Original revient à ci tel qu'il a été déposé ; sans lui, l'export répond 404.
+        [$code, $eml] = Api::request('GET', "/v1/messages/$id/eml", $this->tokens['ci']);
+        if ($deposit['raw'] === null) {
+            self::assertSame(404, $code);
+        } else {
+            self::assertSame([200, base64_decode($deposit['raw'], true)], [$code, $eml]);
+        }
     }
 
     /** @return array<string, array{string}> */

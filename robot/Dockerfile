@@ -2,7 +2,8 @@
 FROM php:8.4-cli
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 # Un mail de 25 Mo tient en mémoire plusieurs fois pendant son dépôt : le JSON de Mailpit, qui écrit « < » en six
-# caractères et tire Text du HTML (environ 300 Mo pour 24 Mo de « < »), ses pièces, leur base64, puis le dépôt en JSON.
+# caractères et tire Text du HTML (environ 300 Mo pour 24 Mo de « < »), ses pièces, leur base64, son Original, puis le dépôt
+# en JSON.
 RUN echo 'memory_limit = 1G' > "$PHP_INI_DIR/conf.d/robot.ini"
 WORKDIR /robot
 COPY composer.json composer.lock ./

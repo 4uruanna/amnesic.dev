@@ -39,6 +39,7 @@ final class Relais
             foreach (Conversion::pieces($message) as $piece) {
                 $parts[$piece['PartID']] = $this->mailpit->part($id, $piece['PartID']);
             }
+            $raw = $this->mailpit->raw($id);
         } catch (RuntimeException $e) {
             // Une 400 ne passera jamais : un en-tête Date « +2400 », que Mailpit lit mais ne sait pas rendre en JSON.
             if ($e->getCode() !== 400) {
@@ -50,10 +51,16 @@ final class Relais
             return;
         }
 
-        [$code, $body] = $this->apimail->deposit(Conversion::deposit($message, $parts));
+        [$code, $body] = $this->apimail->deposit(Conversion::deposit($message, $parts, $raw));
+        $without = '';
+        if ($code === 413) {
+            // Avec l'Original, le dépôt pèse environ 2,3 fois le mail : sans lui, il passe peut-être encore (ADR 0016).
+            [$code, $body] = $this->apimail->deposit(Conversion::deposit($message, $parts, null));
+            $without = ' without raw';
+        }
 
         if ($code === 201) {
-            ($this->journal)("deposited $id {$body['id']}");
+            ($this->journal)("deposited $id {$body['id']}$without");
             $this->mailpit->delete($id);
         } elseif (in_array($code, [400, 413, 415, 422], true)) {
             // Seule une 422 a des errors ; les autres n'ont que leur detail.

@@ -26,9 +26,10 @@ final class TestMailpit
     /**
      * Pour un en-tête que l'API d'envoi refuse de poser, comme Date : le mail brut, remis en SMTP à MAILPIT_SMTP.
      *
+     * @param list<string> $recipients les destinataires de l'enveloppe, dans l'ordre des RCPT TO
      * @return string l'ID Mailpit du mail
      */
-    public static function smtp(string $raw): string
+    public static function smtp(string $raw, array $recipients = ['ci@example.com']): string
     {
         $mail = fopen('php://memory', 'r+');
         fwrite($mail, $raw);
@@ -36,7 +37,7 @@ final class TestMailpit
         $curl = curl_init((string) getenv('MAILPIT_SMTP'));
         curl_setopt_array($curl, [
             CURLOPT_MAIL_FROM => '<noreply@service.example>',
-            CURLOPT_MAIL_RCPT => ['<ci@example.com>'],
+            CURLOPT_MAIL_RCPT => array_map(fn (string $address) => "<$address>", $recipients),
             CURLOPT_UPLOAD => true,
             CURLOPT_INFILE => $mail,
             CURLOPT_TIMEOUT => 30,

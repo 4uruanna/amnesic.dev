@@ -12,5 +12,5 @@ Un Message s'ouvre dans Outlook tel qu'un vrai destinataire l'aurait reçu : le 
 
 - [x] [J08-1 Dépôt de l'Original](1-depot-de-l-original.md)
 - [x] [J08-2 Export EML](2-export-eml.md)
-- [ ] [J08-3 Original relevé par le Robot](3-original-releve-par-le-robot.md)
+- [x] [J08-3 Original relevé par le Robot](3-original-releve-par-le-robot.md)
 - [ ] [J08-4 Recette de l'export](4-recette-de-l-export.md)

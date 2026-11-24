@@ -45,6 +45,12 @@ final class Mailpit
         return $this->request('GET', '/api/v1/message/' . rawurlencode($id) . '/part/' . rawurlencode($partId));
     }
 
+    /** Le mail tel que Mailpit l'a reçu en SMTP, avec les en-têtes qu'il y ajoute : relais.md § Conversion. */
+    public function raw(string $id): string
+    {
+        return $this->request('GET', '/api/v1/message/' . rawurlencode($id) . '/raw');
+    }
+
     public function delete(string $id): void
     {
         $this->request('DELETE', '/api/v1/messages', ['IDs' => [$id]]);

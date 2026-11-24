@@ -49,6 +49,49 @@ final class RelaisTest extends TestCase
         self::assertSame([200, "%PDF-1.4\n\x00\xff"], [$code, $content]);
     }
 
+    /** L'export est le mail remis en SMTP, avec le Return-Path que pose Mailpit, et sans rien qui nomme le destinataire caché. */
+    public function testTheExportOfADepositedMailIsTheMailReceivedWithoutItsHiddenRecipient(): void
+    {
+        $mail = "From: Service <noreply@service.example>\r\nTo: ci@example.com\r\nCc: copie@example.com\r\nSubject: Original\r\n"
+            . "Date: Thu, 30 Oct 2026 12:00:00 +0100\r\nMessage-ID: <original@service.example>\r\n"
+            . "Content-Type: text/plain; charset=iso-8859-1\r\nContent-Transfer-Encoding: 8bit\r\n\r\nCaf\xe9\r\nligne en LF seul\nfin\r\n";
+        // Le destinataire caché d'abord : le for du Received de Mailpit le nomme.
+        TestMailpit::smtp($mail, ['cache@example.com', 'ci@example.com']);
+
+        $this->cycle();
+
+        $id = Api::get('/v1/messages', $this->tokens['ci'])['items'][0]['id'];
+        [$code, $eml] = Api::request('GET', "/v1/messages/$id/eml", $this->tokens['ci']);
+        self::assertSame([200, "Return-Path: <noreply@service.example>\r\n$mail"], [$code, $eml]);
+    }
+
+    /** 12 Mio de pièce jointe : environ 16 Mo sans l'Original, mais 40 avec lui, plus que les 32 Mio du dépôt. */
+    public function testAMailTooBigWithItsOriginalIsDepositedWithoutIt(): void
+    {
+        $content = random_bytes(12 * 1024 * 1024);
+        $id = TestMailpit::send(self::mail('Gros', ['Attachments' => [['Filename' => 'gros.bin', 'ContentType' => 'application/octet-stream', 'Content' => base64_encode($content)]]]));
+
+        $this->cycle();
+
+        self::assertSame([], TestMailpit::messages());
+        $message = Api::get('/v1/messages', $this->tokens['ci'])['items'][0]['id'];
+        self::assertSame(["deposited $id $message without raw"], $this->journal);
+        self::assertSame([200, $content], Api::request('GET', "/v1/messages/$message/attachment/1", $this->tokens['ci']));
+        self::assertSame(404, Api::request('GET', "/v1/messages/$message/eml", $this->tokens['ci'])[0]);
+    }
+
+    /** 24,5 Mio de pièce jointe : plus de 32 Mio même sans l'Original. */
+    public function testAMailTooBigEvenWithoutItsOriginalIsRejected(): void
+    {
+        $id = TestMailpit::send(self::mail('Trop gros', ['Attachments' => [['Filename' => 'gros.bin', 'ContentType' => 'application/octet-stream', 'Content' => base64_encode(random_bytes(49 * 512 * 1024))]]]));
+
+        $this->cycle();
+
+        self::assertSame([$id => ['rejet']], TestMailpit::messages());
+        self::assertSame(["rejected $id 413 : Corps de plus de 32 Mio."], $this->journal);
+        self::assertSame(0, Api::get('/v1/messages', $this->tokens['ci'])['total']);
+    }
+
     public function testARejectedMailStaysInMailpitTaggedAndIsNeverDepositedAgain(): void
     {
         $id = TestMailpit::send(self::mail('Copie cachée seule', ['To' => [], 'Bcc' => ['ci@example.com']]));
