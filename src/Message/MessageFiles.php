@@ -16,12 +16,15 @@ final class MessageFiles
     {
     }
 
-    /** @param list<string> $parts le contenu décodé des pièces jointes, dans l'ordre des partId */
-    public function write(string $id, ?string $text, ?string $html, array $parts): void
+    /**
+     * @param list<string> $parts le contenu décodé des pièces jointes, dans l'ordre des partId
+     * @param ?string $raw l'Original, décodé
+     */
+    public function write(string $id, ?string $text, ?string $html, array $parts, ?string $raw): void
     {
         $directory = $this->directory($id);
         self::mkdir($directory);
-        foreach (['text' => $text, 'html' => $html] as $name => $content) {
+        foreach (['text' => $text, 'html' => $html, 'raw' => $raw] as $name => $content) {
             if ($content !== null) {
                 self::put("$directory/$name", $content);
             }
@@ -58,6 +61,21 @@ final class MessageFiles
     public function open(string $id, int $partId)
     {
         $file = "{$this->directory($id)}/parts/$partId";
+
+        return fopen($file, 'rb') ?: throw new RuntimeException("Fichier $file non ouvert.");
+    }
+
+    /**
+     * L'Original, ouvert en lecture pour être servi en flux, ou null si le Message a été déposé sans lui.
+     *
+     * @return resource|null
+     */
+    public function original(string $id)
+    {
+        $file = "{$this->directory($id)}/raw";
+        if (!is_file($file)) {
+            return null;
+        }
 
         return fopen($file, 'rb') ?: throw new RuntimeException("Fichier $file non ouvert.");
     }

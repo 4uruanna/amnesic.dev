@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apimail\Message\Dto;
 
+use Apimail\Shared\Base64;
 use Apimail\Shared\ValidationFailed;
 
 /** Une pièce jointe de MessageDeposit ; content ressort décodé. */
@@ -40,13 +41,10 @@ final readonly class AttachmentDeposit
             $errors[] = ['field' => 'contentType', 'message' => 'Type type/sous-type de 255 caractères au plus, sans caractère de contrôle, attendu.'];
         }
         $content = $data['content'] ?? null;
-        // base64_decode(…, true) tolère les blancs et un padding absent : l'alphabet et la longueur sont vérifiés avant.
-        $decoded = is_string($content) && strlen($content) % 4 === 0 && preg_match('/[^A-Za-z0-9+\/=]/', $content) === 0
-            ? base64_decode($content, true)
-            : false;
+        $decoded = Base64::decode($content);
         if ($content === null) {
             $errors[] = ['field' => 'content', 'message' => 'Champ obligatoire.'];
-        } elseif ($decoded === false) {
+        } elseif ($decoded === null) {
             $errors[] = ['field' => 'content', 'message' => 'Base64 standard attendu.'];
         }
         if ($errors !== []) {

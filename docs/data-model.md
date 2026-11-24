@@ -110,6 +110,7 @@ CREATE TABLE schema_migrations (
 storage/messages/{id}/text             la partie texte, si text n'est pas null
 storage/messages/{id}/html             la partie HTML, si html n'est pas null
 storage/messages/{id}/parts/{partId}   chaque pièce jointe, décodée
+storage/messages/{id}/raw              l'Original, décodé, si le dépôt avait raw (ADR 0016)
 ```
 
 `storage/` est hors du dossier public. Le nom d'un fichier ne vient jamais du client (`filename` reste en base), donc aucun chemin ne peut sortir de `storage/`.

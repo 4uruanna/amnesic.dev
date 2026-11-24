@@ -33,6 +33,7 @@ final class MessageDepositTest extends TestCase
                 ['filename' => 'facture é.pdf', 'contentType' => 'application/pdf', 'content' => base64_encode("%PDF\x00\xff")],
                 ['filename' => 'vide.txt', 'contentType' => 'text/plain; charset=utf-8', 'content' => ''],
             ],
+            'raw' => base64_encode("From: NoReply@Service.tld\r\nTo: CI@amnesic.dev\r\n\r\nCaf\xe9\n"),
         ]);
 
         self::assertSame(['noreply@service.tld', 'Service'], [$deposit->from->address, $deposit->from->name]);
@@ -45,16 +46,18 @@ final class MessageDepositTest extends TestCase
             [['facture é.pdf', 'application/pdf', "%PDF\x00\xff"], ['vide.txt', 'text/plain; charset=utf-8', '']],
             array_map(fn (AttachmentDeposit $a) => [$a->filename, $a->contentType, $a->content], $deposit->attachments)
         );
+        // L'Original ressort décodé, octet pour octet, sans être lu.
+        self::assertSame("From: NoReply@Service.tld\r\nTo: CI@amnesic.dev\r\n\r\nCaf\xe9\n", $deposit->raw);
     }
 
     public function testMinimalDeposit(): void
     {
-        foreach ([self::MINIMAL, [...self::MINIMAL, 'subject' => null, 'sentAt' => null, 'text' => null, 'html' => null, 'attachments' => null]] as $data) {
+        foreach ([self::MINIMAL, [...self::MINIMAL, 'subject' => null, 'sentAt' => null, 'text' => null, 'html' => null, 'attachments' => null, 'raw' => null]] as $data) {
             $deposit = MessageDeposit::fromArray($data);
 
             self::assertSame(['noreply@x.tld', null], [$deposit->from->address, $deposit->from->name]);
             self::assertSame([['ci@x.tld', null]], array_map(fn (Address $a) => [$a->address, $a->name], $deposit->to));
-            self::assertSame(['', null, null, null, []], [$deposit->subject, $deposit->sentAt, $deposit->text, $deposit->html, $deposit->attachments]);
+            self::assertSame(['', null, null, null, [], null], [$deposit->subject, $deposit->sentAt, $deposit->text, $deposit->html, $deposit->attachments, $deposit->raw]);
         }
     }
 
@@ -132,6 +135,7 @@ final class MessageDepositTest extends TestCase
 
         foreach (['hors alphabet' => 'SGVsbG8=!', 'base64url' => '-_8=', 'espace' => 'SGVs bG8=', 'retour à la ligne' => "SGVs\r\nbG8=", 'sans padding' => 'SGVsbG8', 'padding en trop' => 'SGVsbG8==', 'pas une chaîne' => 1] as $case => $content) {
             yield "content $case" => [$attachment(['content' => $content]), [['field' => 'attachments[0].content', 'message' => 'Base64 standard attendu.']]];
+            yield "raw $case" => [[...self::MINIMAL, 'raw' => $content], [['field' => 'raw', 'message' => 'Base64 standard attendu.']]];
         }
 
         yield 'toutes les erreurs d\'un coup' => [

@@ -55,7 +55,7 @@ Ce document est le contrat de l'API pour ses clients : le Relais (dépôt) et le
   | `404` | route inconnue, ou ressource qui n'existe pas **ou** que le Compte ne voit pas (l'API ne distingue jamais les deux) |
   | `405` | méthode non permise sur cette route |
   | `409` | nom de Compte ou Binding déjà existant |
-  | `413` | corps de plus de 25 Mio (26 214 400 octets), annoncé par `Content-Length` ou réellement lu |
+  | `413` | corps de plus de 32 Mio (33 554 432 octets), annoncé par `Content-Length` ou réellement lu |
   | `415` | corps qui n'est pas `application/json` |
   | `422` | corps ou paramètre invalide |
   | `500` | erreur interne, sans détail technique dans la réponse |
@@ -72,6 +72,7 @@ L'API vérifie le rôle (`403`) avant de charger la ressource (`404`).
 | `GET /v1/messages` | tous | les siens | ✗ |
 | `GET /v1/messages/{id}` | tous | les siens | ✗ |
 | `GET /v1/messages/{id}/attachment/{partId}` | tous | les siens | ✗ |
+| `GET /v1/messages/{id}/eml` | tous | les siens | ✗ |
 | `DELETE /v1/messages/{id}` | tous | les siens | ✗ |
 | `/v1/accounts` et toutes ses sous-routes | ✓ | ✗ | ✗ |
 | `GET /v1/setup` | ✓, jeton dans `?token=` | ✗ | ✗ |
@@ -98,6 +99,7 @@ L'API vérifie le rôle (`403`) avant de charger la ressource (`404`).
 | `text` | string \| null | facultatif : la partie `text/plain` |
 | `html` | string \| null | facultatif : la partie `text/html` |
 | `attachments` | `AttachmentDeposit[]` | facultatif, 100 éléments au plus ; absent vaut `[]` |
+| `raw` | string \| null | facultatif : l'Original, le mail RFC 5322 tel que le Relais l'a reçu, en base64 standard strict comme `content` ; l'API le garde tel quel, sans le lire ni le comparer aux autres champs ([ADR 0016](adr/0016-original-pour-export-eml.md)) |
 
 `cc`, `bcc` et tout autre champ sont refusés comme champs inconnus ([ADR 0006](adr/0006-depot-en-json-decoupe.md)). `receivedAt` est posé par l'API.
 
@@ -244,6 +246,22 @@ Content-Security-Policy: default-src 'none'; sandbox
 
 `404` si le Message ou la pièce n'existe pas ou n'est pas visible.
 
+### `GET /v1/messages/{id}/eml`
+
+Renvoie l'Original du Message, tel quel, en fichier `.eml` : Outlook, Thunderbird ou Apple Mail l'ouvrent comme le mail reçu ([ADR 0016](adr/0016-original-pour-export-eml.md)). Rôles `admin` et `user`. Ne marque pas le Message comme lu.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: message/rfc822
+Content-Length: 48213
+Content-Disposition: attachment; filename="0192c8e4-7b1a-7c3e-9f00-5a4b3c2d1e0f.eml"
+Content-Security-Policy: default-src 'none'; sandbox
+```
+
+L'Original garde tous ses en-têtes, `Cc` compris, mais aucun `Bcc` ([ADR 0002](adr/0002-seul-to-donne-acces.md)). Il n'est jamais comparé au découpage : `from`, `to`, `subject` ou `text` du détail viennent du dépôt, pas de lui.
+
+`404` si le Message n'existe pas, n'est pas visible, ou a été déposé sans Original : avant l'export EML, ou trop gros pour être déposé avec lui ([relais.md § Conversion](relais.md#conversion)).
+
 ### `DELETE /v1/messages/{id}`
 
 Supprime définitivement le Message, pour tous les Comptes ([ADR 0008](adr/0008-suppression-definitive.md)). Rôles `admin` et `user` (sur les siens). `204`, ou `404`.
@@ -287,6 +305,6 @@ Sur toutes les réponses :
 - `X-Content-Type-Options: nosniff`
 - `Cache-Control: no-store`
 
-Aucun en-tête CORS : aucune page web n'appelle l'API en JavaScript (ouvrir `/v1/setup` dans un navigateur n'en a pas besoin). Les pièces jointes portent en plus `Content-Disposition: attachment` et `Content-Security-Policy: default-src 'none'; sandbox`, pour qu'un HTML reçu ne s'exécute jamais sous le domaine de l'API.
+Aucun en-tête CORS : aucune page web n'appelle l'API en JavaScript (ouvrir `/v1/setup` dans un navigateur n'en a pas besoin). Les pièces jointes et l'Original portent en plus `Content-Disposition: attachment` et `Content-Security-Policy: default-src 'none'; sandbox`, pour qu'un HTML reçu ne s'exécute jamais sous le domaine de l'API.
 
 L'API ne limite pas le débit et ne tient pas de journal d'audit : un jeton de 256 bits ne se devine pas, OVH filtre en amont et garde les journaux d'accès.

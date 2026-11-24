@@ -12,6 +12,8 @@
         </testsuite>
     </testsuites>
     <php>
+        <!-- Comme l'image du robot (Dockerfile) : un gros mail tient en mémoire plusieurs fois pendant son dépôt. -->
+        <ini name="memory_limit" value="1G"/>
         <!-- Le Mailpit de compose.yaml à la racine, comme celui de la CI : identifiants jetables, pas un secret. -->
         <env name="MAILPIT_URL" value="http://127.0.0.1:8025"/>
         <env name="MAILPIT_SMTP" value="smtp://127.0.0.1:1025"/>

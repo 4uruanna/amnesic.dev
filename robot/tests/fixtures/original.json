@@ -1,0 +1,67 @@
+{
+    "message": {
+        "ID": "6HimlkbNkxas9rg5Im24xw",
+        "MessageID": "original@service.example",
+        "From": {
+            "Name": "Service CI",
+            "Address": "noreply@service.example"
+        },
+        "To": [
+            {
+                "Name": "",
+                "Address": "ci@example.com"
+            }
+        ],
+        "Cc": [
+            {
+                "Name": "Copie",
+                "Address": "copie@example.com"
+            }
+        ],
+        "Bcc": [
+            {
+                "Name": "",
+                "Address": "cache@example.com"
+            }
+        ],
+        "ReplyTo": [
+            {
+                "Name": "",
+                "Address": "support@service.example"
+            }
+        ],
+        "ReturnPath": "noreply@service.example",
+        "Subject": "Votre réservation",
+        "ListUnsubscribe": {
+            "Header": "",
+            "Links": [],
+            "Errors": "",
+            "HeaderPost": ""
+        },
+        "Date": "2026-10-30T12:02:00+01:00",
+        "Tags": [],
+        "Username": "",
+        "Text": "Réservation confirmée",
+        "HTML": "<p>Réservation confirmée</p><img src=\"cid:logo@service.example\">",
+        "Size": 1009,
+        "Inline": [
+            {
+                "PartID": "2",
+                "FileName": "logo.png",
+                "ContentType": "image/png",
+                "ContentID": "logo@service.example",
+                "Size": 70,
+                "Checksums": {
+                    "MD5": "02c4278e5dc76862c17c04b3bd51946d",
+                    "SHA1": "7c61e84ce8f8e2e32d8ff61b1bf938b16d6212ca",
+                    "SHA256": "bc09c2590d2502c8ffaf1a3c09aa89df222e03d186a8daa0c7fce6321fb6e928"
+                }
+            }
+        ],
+        "Attachments": []
+    },
+    "parts": {
+        "2": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=="
+    },
+    "raw": "QmNjOiBjYWNoZUBleGFtcGxlLmNvbQ0KUmV0dXJuLVBhdGg6IDxub3JlcGx5QHNlcnZpY2UuZXhhbXBsZT4NClJlY2VpdmVkOiBmcm9tIGM4M2FlNWExZGU4NiAobG9jYWxob3N0IFsxMjcuMC4wLjFdKQ0KICAgICAgICBieSBjODNhZTVhMWRlODYgKE1haWxwaXQpIHdpdGggU01UUA0KICAgICAgICBmb3IgPGNhY2hlQGV4YW1wbGUuY29tPjsgVHVlLCAyNCBOb3YgMjAyNiAwODozOTo0NyArMDAwMCAoVVRDKQ0KRnJvbTogU2VydmljZSBDSSA8bm9yZXBseUBzZXJ2aWNlLmV4YW1wbGU+DQpUbzogY2lAZXhhbXBsZS5jb20NCkNjOiBDb3BpZSA8Y29waWVAZXhhbXBsZS5jb20+DQpSZXBseS1Ubzogc3VwcG9ydEBzZXJ2aWNlLmV4YW1wbGUNClN1YmplY3Q6ID0/VVRGLTg/UT9Wb3RyZV9yPUMzPUE5c2VydmF0aW9uPz0NCkRhdGU6IFRodSwgMzAgT2N0IDIwMjYgMTI6MDI6MDAgKzAxMDANCk1lc3NhZ2UtSUQ6IDxvcmlnaW5hbEBzZXJ2aWNlLmV4YW1wbGU+DQpYLVByaW9yaXR5OiAxDQpNSU1FLVZlcnNpb246IDEuMA0KQ29udGVudC1UeXBlOiBtdWx0aXBhcnQvcmVsYXRlZDsgYm91bmRhcnk9InJlbCINCg0KLS1yZWwNCkNvbnRlbnQtVHlwZTogdGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04DQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBxdW90ZWQtcHJpbnRhYmxlDQoNCjxwPlI9QzM9QTlzZXJ2YXRpb24gY29uZmlybT1DMz1BOWU8L3A+PGltZyBzcmM9M0QiY2lkOmxvZ29Ac2VydmljZS5leGFtcGxlIj4NCi0tcmVsDQpDb250ZW50LVR5cGU6IGltYWdlL3BuZw0KQ29udGVudC1JRDogPGxvZ29Ac2VydmljZS5leGFtcGxlPg0KQ29udGVudC1EaXNwb3NpdGlvbjogaW5saW5lOyBmaWxlbmFtZT0ibG9nby5wbmciDQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBiYXNlNjQNCg0KaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUFFQUFBQUJDQVlBQUFBZkZjU0pBQUFBRFVsRVFWUjQybVA4ejhEd0h3QUZCUUlBWDhqeA0KMGdBQUFBQkpSVTVFcmtKZ2dnPT0NCi0tcmVsLS0NCg=="
+}

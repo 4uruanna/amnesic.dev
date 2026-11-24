@@ -19,7 +19,7 @@ src/
                                AccountSummary, AccountDetail, TokenInfo, TokenCreated
   Message/
     MessageController.php      /v1/messages/**
-    MessageService.php         dépôt, visibilité, lecture, suppression, purge
+    MessageService.php         dépôt, visibilité, lecture, export de l'Original, suppression, purge
     MessageRepository.php      tables messages, recipients, attachments
     MessageReadRepository.php  table message_reads
     MessageFiles.php           storage/messages/{id}/
@@ -34,6 +34,7 @@ src/
     Migrator.php               migrations/*.sql et schema_migrations
     Uuid.php                   UUIDv7
     JsonBody.php               lecture du corps JSON (400, 413, 415)
+    Base64.php                 base64 standard strict, décodé (content et raw du dépôt)
     MailAddress.php            adresse validée et mise en minuscules (api.md § Conventions)
     Rfc3339.php                date d'entrée RFC 3339, ramenée en UTC (api.md § Conventions)
     Page.php                   DTO de pagination ; bounds() lit offset et limit (422)

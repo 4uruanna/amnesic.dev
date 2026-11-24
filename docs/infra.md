@@ -7,7 +7,7 @@ L'API est le site principal, `https://api.amnesic.dev`, d'un Hébergement Web Pr
 | Point | Valeur | Effet sur l'API |
 |---|---|---|
 | PHP | 7.4 à 8.5, environnement `stable64` ; FPM derrière Apache 2.4 | PHP 8.4 |
-| Limites PHP | `memory_limit` 512M, `max_execution_time` 165 s, `post_max_size` 130M, `php.ini` non modifiable | corps limité à 25 Mo par l'API |
+| Limites PHP | `memory_limit` 512M, `max_execution_time` 165 s, `post_max_size` 130M, `php.ini` non modifiable | corps limité à 32 Mio par l'API |
 | En-tête `Authorization` | n'arrive pas à PHP sans réglage | `CGIPassAuth On` dans `.htaccess` |
 | Extensions | `pdo_mysql`, `mbstring`, `sodium`, `openssl`, `intl` ; pas de `mailparse` | sans objet : le Relais découpe le MIME |
 | Bases | 10 MySQL 8.4 de 2 Go, 30 connexions simultanées, lecture seule au-delà du quota, inaccessibles hors d'OVH | une base dédiée ; contenu sur disque |
