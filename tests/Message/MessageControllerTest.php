@@ -413,6 +413,46 @@ final class MessageControllerTest extends TestCase
         self::assertSame([$id], $this->ids($ci, '?unread=1'));
     }
 
+    public function testEmlIsTheOriginalServedAsADownload(): void
+    {
+        // Fins de ligne mêlées et octets hors UTF-8 : l'Original revient tel quel.
+        $raw = "Return-Path: <noreply@x.tld>\r\nFrom: noreply@x.tld\r\nTo: ci@x.tld\r\nCc: copie@x.tld\r\nSubject: =?UTF-8?Q?Caf=C3=A9?=\r\n\r\nCaf\xe9\n\x00\r\n";
+        $id = $this->deposit(['ci@x.tld'], ['subject' => 'Autre chose', 'raw' => base64_encode($raw)]);
+
+        foreach ([$this->user('ci', 'ci@x.tld'), $this->app->token('admin')] as $token) {
+            $response = $this->app->request('GET', "/v1/messages/$id/eml", $token);
+
+            self::assertSame(200, $response->getStatusCode());
+            self::assertSame($raw, (string) $response->getBody());
+            self::assertSame('message/rfc822', $response->getHeaderLine('Content-Type'));
+            self::assertSame((string) strlen($raw), $response->getHeaderLine('Content-Length'));
+            self::assertSame("attachment; filename=\"$id.eml\"", $response->getHeaderLine('Content-Disposition'));
+            self::assertSame("default-src 'none'; sandbox", $response->getHeaderLine('Content-Security-Policy'));
+            self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        }
+    }
+
+    public function testEmlOfAMessageWithoutOriginalOrInvisibleIs404(): void
+    {
+        $id = $this->deposit(['ops@x.tld'], ['raw' => 'SGVsbG8=']);
+        $without = $this->deposit(['ops@x.tld'], ['text' => 'Code']);
+        $ops = $this->user('ops', 'ops@x.tld');
+
+        self::assertProblem($this->app->request('GET', "/v1/messages/$without/eml", $ops), 404, 'Original introuvable.');
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id/eml", $this->user('ci', 'ci@x.tld')), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('GET', '/v1/messages/' . Uuid::v7() . '/eml', $this->app->token('admin')), 404, 'Message introuvable.');
+        self::assertProblem($this->app->request('GET', "/v1/messages/$id/eml", $this->bot), 403, 'Rôle non autorisé.');
+    }
+
+    public function testEmlDoesNotMarkTheMessageRead(): void
+    {
+        $id = $this->deposit(['ci@x.tld'], ['raw' => 'SGVsbG8=']);
+        $ci = $this->user('ci', 'ci@x.tld');
+
+        self::assertSame('Hello', (string) $this->app->request('GET', "/v1/messages/$id/eml", $ci)->getBody());
+        self::assertSame([$id], $this->ids($ci, '?unread=1'));
+    }
+
     public function testUserDeletesASharedMessageForEveryAccount(): void
     {
         $id = $this->deposit(['ci@x.tld', 'ops@x.tld'], ['text' => 'Code', 'attachments' => [['filename' => 'a.txt', 'contentType' => 'text/plain', 'content' => 'SGVsbG8=']], 'raw' => 'SGVsbG8=']);

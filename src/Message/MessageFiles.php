@@ -65,6 +65,21 @@ final class MessageFiles
         return fopen($file, 'rb') ?: throw new RuntimeException("Fichier $file non ouvert.");
     }
 
+    /**
+     * L'Original, ouvert en lecture pour être servi en flux, ou null si le Message a été déposé sans lui.
+     *
+     * @return resource|null
+     */
+    public function original(string $id)
+    {
+        $file = "{$this->directory($id)}/raw";
+        if (!is_file($file)) {
+            return null;
+        }
+
+        return fopen($file, 'rb') ?: throw new RuntimeException("Fichier $file non ouvert.");
+    }
+
     /** Supprime le dossier du Message, s'il existe. */
     public function delete(string $id): void
     {

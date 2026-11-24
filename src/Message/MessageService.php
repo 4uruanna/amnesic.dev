@@ -105,6 +105,18 @@ final class MessageService
         return [$attachment, $this->files->open($id, $partId)];
     }
 
+    /**
+     * L'Original d'un Message que le Compte voit, ouvert en lecture (ADR 0016) ; ne marque pas le Message lu.
+     *
+     * @return resource
+     */
+    public function original(Account $account, string $id)
+    {
+        $this->visible($account, $id);
+
+        return $this->files->original($id) ?? throw new NotFound('Original introuvable.');
+    }
+
     /** Supprime définitivement un Message que le Compte voit, pour tous les Comptes (ADR 0008). */
     public function delete(Account $account, string $id): void
     {
