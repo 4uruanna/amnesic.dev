@@ -38,6 +38,7 @@ return array(
     'Apimail\\Message\\Model\\Message' => $baseDir . '/src/Message/Model/Message.php',
     'Apimail\\Message\\Model\\Recipient' => $baseDir . '/src/Message/Model/Recipient.php',
     'Apimail\\Setup\\SetupController' => $baseDir . '/src/Setup/SetupController.php',
+    'Apimail\\Shared\\Base64' => $baseDir . '/src/Shared/Base64.php',
     'Apimail\\Shared\\Conflict' => $baseDir . '/src/Shared/Conflict.php',
     'Apimail\\Shared\\Database' => $baseDir . '/src/Shared/Database.php',
     'Apimail\\Shared\\JsonBody' => $baseDir . '/src/Shared/JsonBody.php',

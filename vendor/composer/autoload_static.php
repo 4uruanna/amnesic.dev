@@ -134,6 +134,7 @@ class ComposerStaticInit72a21b5404babf34905286aca97ff193
         'Apimail\\Message\\Model\\Message' => __DIR__ . '/../..' . '/src/Message/Model/Message.php',
         'Apimail\\Message\\Model\\Recipient' => __DIR__ . '/../..' . '/src/Message/Model/Recipient.php',
         'Apimail\\Setup\\SetupController' => __DIR__ . '/../..' . '/src/Setup/SetupController.php',
+        'Apimail\\Shared\\Base64' => __DIR__ . '/../..' . '/src/Shared/Base64.php',
         'Apimail\\Shared\\Conflict' => __DIR__ . '/../..' . '/src/Shared/Conflict.php',
         'Apimail\\Shared\\Database' => __DIR__ . '/../..' . '/src/Shared/Database.php',
         'Apimail\\Shared\\JsonBody' => __DIR__ . '/../..' . '/src/Shared/JsonBody.php',

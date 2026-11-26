@@ -60,6 +60,20 @@ final class MessageController
             ->withHeader('Content-Security-Policy', "default-src 'none'; sandbox");
     }
 
+    /** @param array{id: string} $args l'id d'un Message existant, un UUID : le nom du fichier n'a rien à échapper */
+    public function eml(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $original = new Stream($this->messages->original($request->getAttribute('account'), $args['id']));
+
+        return $response
+            ->withBody($original)
+            ->withHeader('Content-Type', 'message/rfc822')
+            ->withHeader('Content-Length', (string) $original->getSize())
+            ->withHeader('Content-Disposition', "attachment; filename=\"{$args['id']}.eml\"")
+            // Comme une pièce jointe : le HTML de l'Original ne s'exécute jamais sous le domaine de l'API.
+            ->withHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    }
+
     /** @param array{id: string} $args */
     public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
